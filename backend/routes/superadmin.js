@@ -2,18 +2,31 @@ const express = require("express");
 const router = express.Router();
 const { authMiddleware, superAdminMiddleware } = require("../middlewares/authMiddleware");
 const User = require("../models/User");
+const Department = require("../models/Department");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const Admin = require("../models/admin"); 
 
 const transporter = nodemailer.createTransport({
-  service: "Gmail", 
+  service: "gmail", 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   }
 });
+
+// Verify transporter on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('[MAIL] ❌ Transporter verification failed:', error.message);
+    console.error('[MAIL] Error code:', error.code);
+  } else {
+    console.log('[MAIL] ✅ Transporter ready. Emails will be sent from:', process.env.EMAIL_USER);
+  }
+});
+
+console.log('[MAIL] Transporter initialized with user:', process.env.EMAIL_USER);
 
 const getAdmissionPrefix = (rollNumber) => String(rollNumber || '').trim().slice(0, 3);
 
@@ -31,9 +44,7 @@ const recalculateStudentYears = async () => {
     .lean();
 
   const prefixes = [...new Set(
-    students
-      .map((s) => getAdmissionPrefix(s.username))
-      .filter((p) => /^\d{3}$/.test(p))
+    students.map((s) => getAdmissionPrefix(s.username)).filter((p) => /^\d{3}$/.test(p))
   )].sort((a, b) => Number(b) - Number(a));
 
   const rankByPrefix = {};
@@ -56,15 +67,13 @@ const recalculateStudentYears = async () => {
     })
     .filter(Boolean);
 
-  if (ops.length > 0) {
-    await User.bulkWrite(ops);
-  }
+  if (ops.length > 0) await User.bulkWrite(ops);
 
   return {
     updatedCount: ops.length,
     activePrefixes: prefixes,
     firstYearPrefix: prefixes[0] || null,
-    manualLockedCount: students.filter((student) => student.yearAssignmentMode === 'manual').length
+    manualLockedCount: students.filter((s) => s.yearAssignmentMode === 'manual').length
   };
 };
 
@@ -75,21 +84,19 @@ const softDeleteRoleUser = async (roleUserId, actingUserId) => {
     isDeleted: { $ne: true }
   });
 
-  if (!roleUser) {
-    return { status: 404, body: { error: 'User not found' } };
-  }
+  if (!roleUser) return { status: 404, body: { error: 'User not found' } };
 
   if (String(roleUser._id) === String(actingUserId)) {
     return { status: 400, body: { error: 'You cannot delete your own account' } };
   }
 
   if (roleUser.role === 'superadmin') {
-    const remainingSuperadmins = await User.countDocuments({
+    const remaining = await User.countDocuments({
       role: 'superadmin',
       isDeleted: { $ne: true },
       _id: { $ne: roleUser._id }
     });
-    if (remainingSuperadmins === 0) {
+    if (remaining === 0) {
       return { status: 400, body: { error: 'At least one active superadmin must remain' } };
     }
   }
@@ -108,170 +115,247 @@ const softDeleteRoleUser = async (roleUserId, actingUserId) => {
   return { status: 200, body: { deletedId: roleUser._id, deletedRole: roleUser.role } };
 };
 
-router.get('/management-users', authMiddleware, superAdminMiddleware, async (req, res, next) => {
+// ============== GET SUPERADMIN FOR DEPARTMENT ENDPOINT ==============
+
+router.get("/get-superadmin/:departmentId", authMiddleware, async (req, res, next) => {
   try {
-    const users = await User.find({
-      role: 'admin',
+    const { departmentId } = req.params;
+
+    // Find the superadmin for this department
+    const superadmin = await User.findOne({
+      departmentId,
+      role: 'superadmin',
       isDeleted: { $ne: true }
-    })
-      .select('_id username email role hasLoggedIn createdAt')
-      .lean();
+    }).select('_id username email role').lean();
 
-    const adminsMeta = await Admin.find().select('employee_name employee_id department email').lean();
-    const metaByEmail = {};
-    adminsMeta.forEach((m) => {
-      metaByEmail[String(m.email || '').toLowerCase()] = m;
-    });
+    if (!superadmin) {
+      return res.status(404).json({ error: 'No superadmin found for this department' });
+    }
 
-    const result = users.map((u) => {
-      const meta = metaByEmail[String(u.email || '').toLowerCase()] || null;
-      return {
-        _id: u._id,
-        username: u.username,
-        email: u.email,
-        role: u.role,
-        hasLoggedIn: !!u.hasLoggedIn,
-        createdAt: u.createdAt,
-        employee_name: meta?.employee_name || null,
-        employee_id: meta?.employee_id || null,
-        department: meta?.department || null
-      };
-    });
-
-    res.json(result);
+    res.json(superadmin);
   } catch (err) {
+    console.error('[GET-SUPERADMIN] Error:', err);
     next(err);
   }
 });
 
-router.delete('/management-users/:id', authMiddleware, superAdminMiddleware, async (req, res, next) => {
+// ============== TEST EMAIL ENDPOINT ==============
+
+router.post("/test-email", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
-    const result = await softDeleteRoleUser(req.params.id, req.user._id);
-    return res.status(result.status).json(result.body);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/management-users/bulk-delete', authMiddleware, superAdminMiddleware, async (req, res, next) => {
-  try {
-    const userIds = Array.isArray(req.body.userIds) ? req.body.userIds : [];
-    if (userIds.length === 0) {
-      return res.status(400).json({ error: 'At least one user id is required' });
+    const { testEmail } = req.body;
+    
+    if (!testEmail) {
+      return res.status(400).json({ error: 'testEmail is required' });
     }
 
-    const deleted = [];
-    const failed = [];
+    console.log('[TEST-EMAIL] Attempting to send test email to:', testEmail);
+    console.log('[TEST-EMAIL] Email config - USER:', process.env.EMAIL_USER);
+    console.log('[TEST-EMAIL] Email config - PASSWORD exists:', !!process.env.EMAIL_PASSWORD);
 
-    for (const userId of userIds) {
-      const result = await softDeleteRoleUser(userId, req.user._id);
-      if (result.status === 200) {
-        deleted.push(result.body);
-      } else {
-        failed.push({ userId, error: result.body?.error || 'Failed to delete user' });
-      }
-    }
-
-    res.json({
-      message: `Deleted ${deleted.length} users. ${failed.length} failed.`,
-      deleted,
-      failed
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post('/management-users/:id/send-details', authMiddleware, superAdminMiddleware, async (req, res, next) => {
-  try {
-    const adminUser = await User.findOne({ _id: req.params.id, role: 'admin', isDeleted: { $ne: true } });
-    if (!adminUser) {
-      return res.status(404).json({ error: 'Active admin user not found' });
-    }
-
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      return res.status(500).json({ error: 'Email configuration missing on server' });
-    }
-
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000;
-    adminUser.resetPasswordToken = resetToken;
-    adminUser.resetPasswordExpiry = resetTokenExpiry;
-    await adminUser.save();
-
-    const activateUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/activate-account/${resetToken}`;
-    const mailOptions = {
+    const testMailOptions = {
       from: process.env.EMAIL_USER,
-      to: adminUser.email,
-      subject: 'Admin Account Activation',
-      text:
-        `Hello ${adminUser.username},\n\n` +
-        `Your admin account is ready.\n\n` +
-        `Email: ${adminUser.email}\n\n` +
-        `Please activate your account and set your password:\n${activateUrl}\n\n` +
-        `If you did not request this, please ignore this email.\n`
+      to: testEmail,
+      subject: 'Test Email - Counselling Forms',
+      html: `
+        <h2>Test Email</h2>
+        <p>This is a test email from the Counselling Forms system.</p>
+        <p>If you received this, email is working correctly!</p>
+        <p>Sent at: ${new Date().toLocaleString()}</p>
+      `
     };
 
-    await transporter.sendMail(mailOptions);
-    res.json({ message: 'Admin activation details sent successfully.' });
+    const info = await transporter.sendMail(testMailOptions);
+    console.log('[TEST-EMAIL] ✅ Test email sent! Message ID:', info.messageId);
+    
+    res.json({ 
+      success: true,
+      message: 'Test email sent successfully',
+      messageId: info.messageId,
+      sentTo: testEmail
+    });
   } catch (err) {
-    next(err);
+    console.error('[TEST-EMAIL] ❌ Error:', err.message);
+    console.error('[TEST-EMAIL] Full error:', err);
+    res.status(500).json({ 
+      error: 'Failed to send test email',
+      details: err.message
+    });
   }
 });
 
-router.post('/students/recalculate-years', authMiddleware, superAdminMiddleware, async (req, res, next) => {
-  try {
-    const result = await recalculateStudentYears();
-    res.json({
-      message: 'Student years recalculated successfully',
-      ...result
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+// ============== CREATE ADMIN ENDPOINT ==============
 
 router.post("/admins", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
     const { employee_name, employee_id, department, email } = req.body;
 
-    // Check if email already exists
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ error: "Email already exists" });
+    // Get superadmin's department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept) {
+      return res.status(400).json({ error: 'Superadmin must be assigned to a department' });
+    }
 
-    // Generate temporary password
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    // Verify department matches (case-insensitive)
+    console.log(`[CREATE-ADMIN] Dept comparison - Sent: "${department}" | DB: "${superadminDept.name}"`);
+    if (department.trim() !== superadminDept.name.trim()) {
+      console.log(`[CREATE-ADMIN] Department mismatch! Sent length: ${department.length}, DB length: ${superadminDept.name.length}`);
+      return res.status(403).json({ 
+        error: 'You can only create admins for your department',
+        debug: { sent: department, stored: superadminDept.name }
+      });
+    }
 
-    // Create User in users collection
-    const newUser = new User({
-      username: employee_name,
-      email,
-      password: hashedPassword,
-      role: "admin"
+    // Check if Admin metadata already exists for this email in this department (case-insensitive)
+    const existingAdminByEmail = await Admin.findOne({ 
+      email: new RegExp(`^${email.trim()}$`, 'i'),
+      department 
     });
-    await newUser.save();
+    if (existingAdminByEmail) {
+      return res.status(400).json({ error: "Admin with this email already exists in this department" });
+    }
+
+    // Also check by employee_id in the same department to prevent duplicate IDs
+    if (employee_id) {
+      const existingAdminById = await Admin.findOne({ 
+        employee_id: employee_id.trim(),
+        department 
+      });
+      if (existingAdminById) {
+        return res.status(400).json({ error: "Admin with this employee ID already exists in this department" });
+      }
+    }
+
+    // User can already exist (e.g., as superadmin or principal)
+    let newUser = await User.findOne({ email });
+    let isNewUser = false;
+    let tempPassword = null;
+    
+    if (newUser) {
+      // User exists, ensure they have admin role in their department
+      if (newUser.departmentId && newUser.departmentId.toString() !== req.user.departmentId.toString()) {
+        return res.status(400).json({ error: "This user belongs to a different department" });
+      }
+      // Update user's department if not set
+      if (!newUser.departmentId) {
+        newUser.departmentId = req.user.departmentId;
+      }
+      // Add admin role if not already present (can have multiple roles conceptually, but we use string)
+      // For now, we just ensure the user record exists
+      await newUser.save();
+    } else {
+      // Create new user with admin role
+      isNewUser = true;
+      tempPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+      newUser = new User({
+        username: employee_name,
+        email,
+        password: hashedPassword,
+        role: "admin",
+        departmentId: req.user.departmentId
+      });
+      await newUser.save();
+    }
 
     // Create Admin metadata in admins collection
-   const newAdmin = new Admin({
-  employee_name,
-  employee_id,
-  department,
-  email
-});
-await newAdmin.save();
+    const newAdmin = new Admin({
+      employee_name,
+      employee_id,
+      department,
+      email
+    });
+    await newAdmin.save();
 
-    res.status(201).json({ message: "Admin created. Use Send Details to email credentials manually." });
+    console.log(`[CREATE-ADMIN] Created admin: ${email}, ID: ${newAdmin._id}`);
 
-  } catch (err) { next(err);
+    // Send email with credentials if new user was created
+    if (isNewUser && tempPassword) {
+      try {
+        console.log(`[CREATE-ADMIN] Email check - USER: ${process.env.EMAIL_USER}, PWD exists: ${!!process.env.EMAIL_PASSWORD}`);
+        
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+          console.warn('[CREATE-ADMIN] ⚠️ Email config missing - EMAIL_USER or EMAIL_PASSWORD not set');
+        } else {
+          const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Admin Account Created - Counselling Forms',
+            html: `
+              <h2>Welcome to Counselling Forms</h2>
+              <p>Your admin account has been created for the <strong>${department}</strong> department.</p>
+              
+              <h3>Your Login Credentials:</h3>
+              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Password:</strong> ${tempPassword}</p>
+              
+              <p style="color: red; font-weight: bold;">⚠️ Important: Please change your password immediately after first login.</p>
+              
+              <p style="margin-top: 20px;">You can now login to the Counselling Forms system.</p>
+              <p style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; color: #666; font-size: 12px;">
+                If you did not request this account, please contact the administrator.
+              </p>
+            `
+          };
+
+          console.log(`[CREATE-ADMIN] 📧 Sending email to ${email} from ${process.env.EMAIL_USER}...`);
+          const info = await transporter.sendMail(mailOptions);
+          console.log(`[CREATE-ADMIN] ✅ Email sent successfully! Message ID: ${info.messageId}`);
+        }
+      } catch (emailErr) {
+        console.error('[CREATE-ADMIN] ❌ Error sending email:', emailErr.message);
+        console.error('[CREATE-ADMIN] Error details:', emailErr);
+        // Don't block the response if email fails
+      }
+    }
+
+    res.status(201).json({ 
+      success: true,
+      message: "Admin created successfully",
+      admin: {
+        _id: newAdmin._id,
+        user_id: newUser._id,
+        employee_name,
+        employee_id,
+        email,
+        department,
+        tempPassword: isNewUser ? tempPassword : undefined,
+        emailSent: isNewUser
+      }
+    });
+
+  } catch (err) { 
+    console.error('[CREATE-ADMIN] Error:', err);
+    next(err);
   }
 });
 
+// ============== GET ADMINS ENDPOINT ==============
+
 router.get("/admins", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
-    const admins = await Admin.find().lean();
+    // Get superadmin's department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept) {
+      return res.status(400).json({ error: 'Superadmin must be assigned to a department' });
+    }
+
+    console.log(`[ADMINS] Fetching admins for department: ${superadminDept.name} (${superadminDept._id})`);
+
+    // Find admins with matching department
+    const admins = await Admin.find({ 
+      department: superadminDept.name 
+    }).lean();
+
+    console.log(`[ADMINS] Found ${admins.length} admins in ${superadminDept.name} department`);
+
     const emails = admins.map(a => String(a.email || '').toLowerCase());
-    const adminUsers = await User.find({ email: { $in: emails }, role: 'admin' })
+    const adminUsers = await User.find({ 
+      email: { $in: emails }, 
+      role: 'admin',
+      departmentId: req.user.departmentId
+    })
       .select('_id email hasLoggedIn isDeleted')
       .lean();
 
@@ -291,15 +375,156 @@ router.get("/admins", authMiddleware, superAdminMiddleware, async (req, res, nex
     });
 
     res.json(result);
-  } catch (err) { next(err);
+  } catch (err) { 
+    console.error('[ADMINS] Error:', err);
+    next(err);
   }
 });
 
-router.post("/admins/:id/send-details", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+// ============== DELETE ADMIN ENDPOINT ==============
+
+router.delete("/admins/:id", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
     const adminMeta = await Admin.findById(req.params.id);
     if (!adminMeta) {
       return res.status(404).json({ error: "Admin metadata not found" });
+    }
+
+    // Verify admin is from the same department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept || adminMeta.department !== superadminDept.name) {
+      return res.status(403).json({ error: 'You can only manage admins from your department' });
+    }
+
+    const userAdmin = await User.findOne({ email: adminMeta.email, role: 'admin' });
+    if (userAdmin) {
+      // Unassign all students from this admin
+      await User.updateMany(
+        { assignedMentor: userAdmin._id, role: 'user' },
+        { $unset: { assignedMentor: "" } }
+      );
+
+      // Hard delete the user from database
+      await User.findByIdAndDelete(userAdmin._id);
+    }
+
+    await Admin.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Admin deleted successfully" });
+  } catch (err) { next(err); }
+});
+
+// ============== DELETE MANAGEMENT USER ENDPOINT (Alias for /admins/:id) ==============
+
+router.delete("/management-users/:id", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const adminMeta = await Admin.findById(req.params.id);
+    if (!adminMeta) {
+      return res.status(404).json({ error: "Admin metadata not found" });
+    }
+
+    // Verify admin is from the same department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept || adminMeta.department !== superadminDept.name) {
+      return res.status(403).json({ error: 'You can only manage admins from your department' });
+    }
+
+    const userAdmin = await User.findOne({ email: adminMeta.email, role: 'admin' });
+    if (userAdmin) {
+      // Unassign all students from this admin
+      await User.updateMany(
+        { assignedMentor: userAdmin._id, role: 'user' },
+        { $unset: { assignedMentor: "" } }
+      );
+
+      // Hard delete the user from database
+      await User.findByIdAndDelete(userAdmin._id);
+    }
+
+    await Admin.findByIdAndDelete(req.params.id);
+
+    console.log(`[DELETE-MANAGEMENT-USER] Deleted admin: ${req.params.id}`);
+    res.json({ message: "Admin deleted successfully" });
+  } catch (err) { 
+    console.error('[DELETE-MANAGEMENT-USER] Error:', err);
+    next(err); 
+  }
+});
+
+// ============== BULK DELETE MANAGEMENT USERS ENDPOINT ==============
+
+router.post("/management-users/bulk-delete", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const { userIds } = req.body;
+    
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ error: 'userIds array required' });
+    }
+
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept) {
+      return res.status(400).json({ error: 'Superadmin must be assigned to a department' });
+    }
+
+    // Verify all admins are from the same department
+    const adminMetas = await Admin.find({ _id: { $in: userIds } });
+    
+    const invalidAdmins = adminMetas.filter(a => a.department !== superadminDept.name);
+    if (invalidAdmins.length > 0) {
+      return res.status(403).json({ 
+        error: 'You can only delete admins from your department',
+        invalidCount: invalidAdmins.length
+      });
+    }
+
+    // Delete each admin
+    let deletedCount = 0;
+    for (const adminId of userIds) {
+      const adminMeta = await Admin.findById(adminId);
+      if (!adminMeta) continue;
+
+      // Find and hard-delete the user
+      const userAdmin = await User.findOne({ email: adminMeta.email, role: 'admin' });
+      if (userAdmin) {
+        // Unassign students
+        await User.updateMany(
+          { assignedMentor: userAdmin._id, role: 'user' },
+          { $unset: { assignedMentor: "" } }
+        );
+
+        // Hard delete the user from database
+        await User.findByIdAndDelete(userAdmin._id);
+      }
+
+      // Delete admin metadata
+      await Admin.findByIdAndDelete(adminId);
+      deletedCount++;
+    }
+
+    console.log(`[BULK-DELETE-MANAGEMENT-USERS] Deleted ${deletedCount} admins`);
+    res.json({ 
+      message: `${deletedCount} admin(s) deleted successfully`,
+      deleted: deletedCount
+    });
+  } catch (err) { 
+    console.error('[BULK-DELETE-MANAGEMENT-USERS] Error:', err);
+    next(err); 
+  }
+});
+
+// ============== SEND MANAGEMENT USER DETAILS ENDPOINT (Alias for /admins/:id/send-details) ==============
+
+router.post("/management-users/:id/send-details", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const adminMeta = await Admin.findById(req.params.id);
+    if (!adminMeta) {
+      return res.status(404).json({ error: "Admin metadata not found" });
+    }
+
+    // Verify admin is from the same department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept || adminMeta.department !== superadminDept.name) {
+      return res.status(403).json({ error: 'You can only manage admins from your department' });
     }
 
     const adminUser = await User.findOne({ email: adminMeta.email, role: 'admin', isDeleted: { $ne: true } });
@@ -332,223 +557,394 @@ router.post("/admins/:id/send-details", authMiddleware, superAdminMiddleware, as
     };
 
     await transporter.sendMail(mailOptions);
+    console.log(`[SEND-MANAGEMENT-USER-DETAILS] Sent details to admin: ${adminUser.email}`);
     res.json({ message: 'Admin activation details sent successfully.' });
-  } catch (err) { next(err); }
+  } catch (err) { 
+    console.error('[SEND-MANAGEMENT-USER-DETAILS] Error:', err);
+    next(err); 
+  }
 });
 
-router.delete("/admins/:id", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+// ============== SEND ADMIN DETAILS ENDPOINT ==============
+
+router.post("/admins/:id/send-details", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
     const adminMeta = await Admin.findById(req.params.id);
     if (!adminMeta) {
       return res.status(404).json({ error: "Admin metadata not found" });
     }
 
-    const userAdmin = await User.findOne({ email: adminMeta.email, role: 'admin', isDeleted: { $ne: true } });
-    if (userAdmin) {
-      await User.updateMany(
-        { assignedMentor: userAdmin._id, role: 'user', isDeleted: { $ne: true } },
-        { $unset: { assignedMentor: "" } }
-      );
-
-      userAdmin.isDeleted = true;
-      await userAdmin.save();
+    // Verify admin is from the same department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept || adminMeta.department !== superadminDept.name) {
+      return res.status(403).json({ error: 'You can only manage admins from your department' });
     }
 
-    await Admin.findByIdAndDelete(req.params.id);
+    const adminUser = await User.findOne({ email: adminMeta.email, role: 'admin', isDeleted: { $ne: true } });
+    if (!adminUser) {
+      return res.status(404).json({ error: "Admin user not found" });
+    }
 
-    res.json({ message: "Admin deleted successfully" });
-  } catch (err) { next(err); }
-});
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      return res.status(500).json({ error: 'Email configuration missing on server' });
+    }
 
-router.get("/students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-  try {
-    // Get only users with role "user"
-    const students = await User.find({ role: "user" }).select('username email _id role assignedMentor yearOfStudy');
-    res.json(students);
-  } catch (err) { next(err);
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000;
+
+    adminUser.resetPasswordToken = resetToken;
+    adminUser.resetPasswordExpiry = resetTokenExpiry;
+    await adminUser.save();
+
+    const activateUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/activate-account/${resetToken}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminUser.email,
+      subject: 'Admin Account Activation',
+      text:
+        `Hello ${adminUser.username},\n\n` +
+        `Your admin account is ready.\n\n` +
+        `Email: ${adminUser.email}\n\n` +
+        `Please activate your account and set your password:\n${activateUrl}\n\n` +
+        `If you did not request this, please ignore this email.\n`
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[SEND-ADMIN-DETAILS] Sent details to admin: ${adminUser.email}`);
+    res.json({ message: 'Admin activation details sent successfully.' });
+  } catch (err) { 
+    console.error('[SEND-ADMIN-DETAILS] Error:', err);
+    next(err); 
   }
 });
 
+// ============== NOTIFY ADMIN ABOUT NEW STUDENTS ENDPOINT ==============
 
-router.get("/reports", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+router.post("/admins/:id/notify", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
-    const { registrationYear } = req.query;
-
-    const Marks = require('../models/Semester');
-    const Profile = require('../models/Profile');
-
-    // Helper: extract registration year from regdNo (e.g. "322103311030" → "2022")
-    const getYearFromRegdNo = (regdNo) => {
-      const str = String(regdNo || '').trim();
-      if (str.length < 3 || str[0] !== '3') return null;
-      const digits = str.substring(1, 3);
-      if (!/^\d{2}$/.test(digits)) return null;
-      return '20' + digits;
-    };
-
-    // Step 1: Load all student profiles that have a regdNo
-    const allProfiles = await Profile.find(
-      { regdNo: { $exists: true, $ne: null }, isDeleted: { $ne: true } },
-      { regdNo: 1, userId: 1 }
-    ).lean();
-
-    // Step 2: Filter by registration year (derived from regdNo)
-    const matchedProfiles = registrationYear
-      ? allProfiles.filter(p => getYearFromRegdNo(p.regdNo) === registrationYear)
-      : allProfiles;
-
-    if (matchedProfiles.length === 0) {
-      return res.json([]);
+    const adminMeta = await Admin.findById(req.params.id);
+    if (!adminMeta) {
+      return res.status(404).json({ error: "Admin metadata not found" });
     }
 
-    // Step 3: Get the login emails for the matched userIds
-    const userIds = matchedProfiles.map(p => p.userId);
-    const users = await User.find(
-      { _id: { $in: userIds }, role: 'user', isDeleted: { $ne: true } },
-      { _id: 1, email: 1 }
-    ).lean();
+    // Verify admin is from the same department
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept || adminMeta.department !== superadminDept.name) {
+      return res.status(403).json({ error: 'You can only notify admins from your department' });
+    }
 
-    // Build maps for lookup
-    const userIdToEmail = {};
-    users.forEach(u => { userIdToEmail[String(u._id)] = u.email; });
+    const adminUser = await User.findOne({ email: adminMeta.email });
+    if (!adminUser) {
+      return res.status(404).json({ error: "Admin user not found" });
+    }
 
-    const regdNoByEmail = {};
-    matchedProfiles.forEach(p => {
-      const email = userIdToEmail[String(p.userId)];
-      if (email) regdNoByEmail[email] = p.regdNo;
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      return res.status(500).json({ error: 'Email configuration missing on server' });
+    }
+
+    // Get count of unassigned students in the department
+    const unassignedCount = await User.countDocuments({
+      role: 'user',
+      departmentId: req.user.departmentId,
+      $or: [
+        { assignedMentor: { $exists: false } },
+        { assignedMentor: null }
+      ],
+      isDeleted: { $ne: true }
     });
 
-    const emails = Object.keys(regdNoByEmail);
-    if (emails.length === 0) {
-      return res.json([]);
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminUser.email,
+      subject: `New Student Batch Created - ${unassignedCount} Unassigned Students`,
+      html: `
+        <h2>New Student Batch Created</h2>
+        <p>Hello ${adminUser.username},</p>
+        <p>A new batch of students has been created in your department: <strong>${superadminDept.name}</strong></p>
+        
+        <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <h3 style="margin-top: 0; color: #1976d2;">Summary:</h3>
+          <p><strong>Total Unassigned Students:</strong> ${unassignedCount}</p>
+          <p>These students are ready to be assigned to mentors.</p>
+        </div>
+        
+        <p>Please log in to the Counselling Forms system to view and manage these students.</p>
+        
+        <p style="margin-top: 30px; color: #666; font-size: 12px;">
+          This is an automated notification. Please do not reply to this email.
+        </p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[NOTIFY-ADMIN] Notification sent to admin: ${adminUser.email}`);
+    res.json({ 
+      message: 'Notification sent successfully',
+      unassignedStudents: unassignedCount
+    });
+  } catch (err) { 
+    console.error('[NOTIFY-ADMIN] Error:', err);
+    next(err); 
+  }
+});
+
+// ---------------- ROUTES ----------------
+
+// ============== GET MANAGEMENT USERS (ADMINS) ENDPOINT ==============
+
+router.get("/management-users", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const superadminDept = await Department.findById(req.user.departmentId);
+    if (!superadminDept) {
+      return res.status(400).json({ error: 'Superadmin must be assigned to a department' });
     }
 
-    // Step 4: Fetch marks for those emails
-    const marksData = await Marks.find({ email: { $in: emails } }).lean();
+    console.log(`[MANAGEMENT-USERS] Fetching admins for department: ${superadminDept.name}`);
 
-    // Step 5: Attach the regdNo as registrationNumber in the response
-    const result = marksData.map(m => ({
-      ...m,
-      registrationNumber: regdNoByEmail[m.email] || m.email
-    }));
+    const admins = await Admin.find({ 
+      department: superadminDept.name 
+    }).lean();
 
-    return res.json(result);
-  } catch (err) {
+    const emails = admins.map(a => String(a.email || '').toLowerCase());
+    const adminUsers = await User.find({ 
+      email: { $in: emails }, 
+      role: 'admin',
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    })
+      .select('_id email hasLoggedIn username')
+      .lean();
+
+    const userMap = {};
+    adminUsers.forEach(u => {
+      userMap[String(u.email || '').toLowerCase()] = u;
+    });
+
+    const result = admins.map(a => {
+      const user = userMap[String(a.email || '').toLowerCase()];
+      return {
+        _id: a._id,
+        employee_name: a.employee_name,
+        employee_id: a.employee_id,
+        email: a.email,
+        department: a.department,
+        userId: user?._id || null,
+        hasLoggedIn: !!user?.hasLoggedIn
+      };
+    });
+
+    res.json(result);
+  } catch (err) { 
+    console.error('[MANAGEMENT-USERS] Error:', err);
     next(err);
   }
 });
 
+// ============== GET STUDENTS ENDPOINT ==============
 
-// --- Mentor Allocation Routes --- 
-
-// Get mentors and their current assigned students
-router.get("/mentors-with-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-    try {
-        const mentors = await User.find({ role: 'admin' }).select('username email _id');
-        const mentorsWithStats = await Promise.all(mentors.map(async (m) => {
-            const count = await User.countDocuments({ assignedMentor: m._id, role: 'user', isDeleted: { $ne: true } });
-            return { ...m.toObject(), assignedStudentsCount: count };
-        }));
-        res.json(mentorsWithStats);
-    } catch (err) { next(err); }
-});
-
-// Cleanup: Remove all soft-deleted students
-router.post("/cleanup/remove-deleted-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-    try {
-        const result = await User.deleteMany({ role: 'user', isDeleted: true });
-        res.json({
-            message: `Permanently deleted ${result.deletedCount} soft-deleted student records`,
-            deletedCount: result.deletedCount
-        });
-    } catch (err) { next(err); }
-});
-
-// Get unassigned students
-router.get("/unassigned-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-    try {
-        // Unassigned students are users with no assignedMentor
-        const students = await User.find({
-            role: "user",
-            $or: [
-                { assignedMentor: { $exists: false } },
-                { assignedMentor: null }
-            ],
-            isDeleted: { $ne: true }
-        }).select('username email _id yearOfStudy');
-        res.json(students);
-    } catch (err) { next(err); }
-});
-
-// Assign students manually or randomly
-router.post("/assign-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-    try {
-        const { mentorId, studentIds } = req.body;
-        
-        if (!mentorId || !studentIds || !Array.isArray(studentIds)) {
-            return res.status(400).json({ error: "Invalid data provided." });
-        }
-
-        // Validate mentor exists
-        const mentor = await User.findById(mentorId);
-        if (!mentor || mentor.role !== 'admin') {
-            return res.status(404).json({ error: "Mentor not found." });
-        }
-
-        // Assign
-        await User.updateMany(
-            { _id: { $in: studentIds } },
-            { $set: { assignedMentor: mentorId } }
-        );
-
-        res.json({ success: true, message: `Assigned ${studentIds.length} students to ${mentor.username}` });
-    } catch (err) { next(err); }
-});
-
-// Get students with their profile info and assigned mentor name
-router.get("/students-with-profiles", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+router.get("/students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
   try {
-    const Profile = require('../models/Profile');
-    const students = await User.find({ role: 'user', isDeleted: { $ne: true } })
-      .select('username email _id assignedMentor')
-      .populate('assignedMentor', 'username email');
+    console.log(`[STUDENTS] Fetching students for department: ${req.user.departmentId}`);
+    
+    const students = await User.find({ 
+      role: "user",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    }).select('username email _id role assignedMentor yearOfStudy');
+    
+    console.log(`[STUDENTS] Found ${students.length} students`);
+    
+    res.json(students);
+  } catch (err) {
+    console.error('[STUDENTS] Error:', err);
+    next(err);
+  }
+});
 
-    const studentIds = students.map(s => s._id);
-    const profiles = await Profile.find({ userId: { $in: studentIds } }).select('userId regdNo name');
+// ============== GET MENTORS WITH STUDENTS ENDPOINT ==============
 
-    const profileMap = {};
-    profiles.forEach(p => { profileMap[p.userId.toString()] = p; });
+router.get("/mentors-with-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    console.log(`[MENTORS-WITH-STUDENTS] Fetching mentors for department: ${req.user.departmentId}`);
 
-    const result = students.map(s => ({
-      _id: s._id,
-      username: s.username,
-      email: s.email,
-      assignedMentor: s.assignedMentor || null,
-      profile: profileMap[s._id.toString()] || null
+    const mentors = await User.find({
+      role: "admin",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    }).select('_id username email').lean();
+
+    console.log(`[MENTORS-WITH-STUDENTS] Found ${mentors.length} mentors`);
+
+    const mentorIds = mentors.map(m => m._id);
+    const studentsByMentor = await User.find({
+      role: "user",
+      assignedMentor: { $in: mentorIds },
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    }).select('_id username email assignedMentor yearOfStudy').lean();
+
+    const result = mentors.map(mentor => ({
+      ...mentor,
+      students: studentsByMentor.filter(s => String(s.assignedMentor) === String(mentor._id))
     }));
 
     res.json(result);
-  } catch (err) { next(err); }
+  } catch (err) {
+    console.error('[MENTORS-WITH-STUDENTS] Error:', err);
+    next(err);
+  }
 });
 
-// Unassign students
+// ============== GET UNASSIGNED STUDENTS ENDPOINT ==============
+
+router.get("/unassigned-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    console.log(`[UNASSIGNED-STUDENTS] Fetching for department: ${req.user.departmentId}`);
+
+    const students = await User.find({
+      role: "user",
+      departmentId: req.user.departmentId,
+      $or: [
+        { assignedMentor: { $exists: false } },
+        { assignedMentor: null }
+      ],
+      isDeleted: { $ne: true }
+    }).select('_id username email yearOfStudy').lean();
+
+    console.log(`[UNASSIGNED-STUDENTS] Found ${students.length} unassigned students`);
+
+    res.json(students);
+  } catch (err) {
+    console.error('[UNASSIGNED-STUDENTS] Error:', err);
+    next(err);
+  }
+});
+
+// ============== GET STUDENTS WITH PROFILES ENDPOINT ==============
+
+router.get("/students-with-profiles", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    console.log(`[STUDENTS-WITH-PROFILES] Fetching for department: ${req.user.departmentId}`);
+
+    const students = await User.find({
+      role: "user",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    }).select('_id username email assignedMentor yearOfStudy').lean();
+
+    const studentIds = students.map(s => s._id);
+    const Profile = require("../models/Profile");
+    const profiles = await Profile.find({
+      userId: { $in: studentIds }
+    }).lean();
+
+    const profileMap = {};
+    profiles.forEach(p => {
+      profileMap[String(p.userId)] = p;
+    });
+
+    const result = students.map(student => ({
+      ...student,
+      profile: profileMap[String(student._id)] || null
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('[STUDENTS-WITH-PROFILES] Error:', err);
+    next(err);
+  }
+});
+
+// ============== ASSIGN STUDENTS ENDPOINT ==============
+
+router.post("/assign-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const { studentIds, mentorId } = req.body;
+
+    if (!Array.isArray(studentIds) || !mentorId) {
+      return res.status(400).json({ error: 'studentIds array and mentorId required' });
+    }
+
+    // Verify mentor exists and is from same department
+    const mentor = await User.findOne({
+      _id: mentorId,
+      role: "admin",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    });
+
+    if (!mentor) {
+      return res.status(400).json({ error: 'Mentor not found or not from your department' });
+    }
+
+    // Verify all students are from same department
+    const students = await User.find({
+      _id: { $in: studentIds },
+      role: "user",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    });
+
+    if (students.length !== studentIds.length) {
+      return res.status(400).json({ error: 'Some students not found or not from your department' });
+    }
+
+    // Assign students to mentor
+    const result = await User.updateMany(
+      { _id: { $in: studentIds } },
+      { $set: { assignedMentor: mentorId } }
+    );
+
+    console.log(`[ASSIGN-STUDENTS] Assigned ${result.modifiedCount} students to mentor ${mentorId}`);
+
+    res.json({ 
+      message: 'Students assigned successfully',
+      assigned: result.modifiedCount
+    });
+  } catch (err) {
+    console.error('[ASSIGN-STUDENTS] Error:', err);
+    next(err);
+  }
+});
+
+// ============== UNASSIGN STUDENTS ENDPOINT ==============
+
 router.post("/unassign-students", authMiddleware, superAdminMiddleware, async (req, res, next) => {
-    try {
-        const { studentIds } = req.body;
+  try {
+    const { studentIds } = req.body;
 
-        if (!studentIds || !Array.isArray(studentIds)) {
-            return res.status(400).json({ error: "Invalid data provided." });
-        }
+    if (!Array.isArray(studentIds)) {
+      return res.status(400).json({ error: 'studentIds array required' });
+    }
 
-        // Unassign
-        await User.updateMany(
-            { _id: { $in: studentIds } },
-            { $unset: { assignedMentor: "" } }
-        );
+    // Verify all students are from same department
+    const students = await User.find({
+      _id: { $in: studentIds },
+      role: "user",
+      departmentId: req.user.departmentId,
+      isDeleted: { $ne: true }
+    });
 
-        res.json({ success: true, message: `Unassigned ${studentIds.length} students.` });
-    } catch (err) { next(err); }
+    if (students.length !== studentIds.length) {
+      return res.status(400).json({ error: 'Some students not found or not from your department' });
+    }
+
+    // Unassign students
+    const result = await User.updateMany(
+      { _id: { $in: studentIds } },
+      { $unset: { assignedMentor: "" } }
+    );
+
+    console.log(`[UNASSIGN-STUDENTS] Unassigned ${result.modifiedCount} students`);
+
+    res.json({ 
+      message: 'Students unassigned successfully',
+      unassigned: result.modifiedCount
+    });
+  } catch (err) {
+    console.error('[UNASSIGN-STUDENTS] Error:', err);
+    next(err);
+  }
 });
 
 module.exports = router;
-

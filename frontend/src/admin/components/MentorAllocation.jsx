@@ -391,7 +391,7 @@ const MentorAllocation = () => {
                             </TableCell>
                             <TableCell>Name</TableCell>
                             <TableCell>Roll Number</TableCell>
-                            <TableCell>Section</TableCell>
+                            <TableCell>Department</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -405,7 +405,7 @@ const MentorAllocation = () => {
                               </TableCell>
                               <TableCell>{student.username}</TableCell>
                               <TableCell>{student.email.split('@')[0]}</TableCell>
-                              <TableCell>{student.profile?.section || 'N/A'}</TableCell>
+                              <TableCell>{student.profile?.department || 'N/A'}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

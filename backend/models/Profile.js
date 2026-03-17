@@ -14,7 +14,8 @@ const profileSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true }, // Foreign key
     regdNo: { type: String, required: false, unique: true, sparse: true }, // Registration Number (Primary key)
-    section: { type: String, required: false }, // Section
+    uniqueId: { type: String, required: false, unique: true, sparse: true }, // Unique ID generated from email
+    department: { type: String, required: false }, // Department (renamed from section)
     mobileNumber: { type: String, required: false }, // Mobile Number
     name: { type: String, required: false }, // Name as per SSC Marks Memo
     email: { type: String, required: false, unique: true, sparse: true }, // Email
@@ -68,7 +69,7 @@ const profileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-profileSchema.index({ section: 1 });
+profileSchema.index({ department: 1 });
 profileSchema.index({ createdAt: 1 });
 profileSchema.index({ isDeleted: 1 });
 

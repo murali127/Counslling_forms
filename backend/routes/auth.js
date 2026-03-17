@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
 const { authMiddleware } = require('../middlewares/authMiddleware');
+const { getEnabledProfileFields, calculateProfileCompletion } = require('../utils/profileFieldUtils');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
@@ -102,23 +103,19 @@ router.get('/user', authMiddleware, async (req, res, next) => {
 
     const profile = await Profile.findOne({ userId: req.user.id });
 
-      let profileCompletion = 0;
-      if (profile) {
-        const requiredFields = [
-          profile.name, profile.regdNo, profile.section, profile.mobileNumber, profile.email,
-          profile.admissionType, profile.caste, profile.rank, profile.dob, profile.bloodGroup,
-          profile.tenthMarks?.percentage, profile.interDiplomaMarks?.percentage,
-          profile.parentDetails?.name, profile.parentDetails?.address, profile.parentDetails?.occupation, profile.parentDetails?.contactNumber
-        ];
-        const answered = requiredFields.filter(f => f !== undefined && f !== null && String(f).trim() !== '').length;
-        profileCompletion = Math.round((answered / requiredFields.length) * 100);
-      }
+    let profileCompletion = 0;
+    if (profile) {
+      // Get enabled profile fields
+      const enabledFields = await getEnabledProfileFields(user.departmentId);
+      profileCompletion = calculateProfileCompletion(profile, enabledFields);
+    }
 
     
     res.status(200).json({
       username: user.username,
       email: user.email,
       role: user.role,
+      departmentId: user.departmentId || null,
       hasProfile: !!profile,
       profilePicture: profile?.profilePicture || null,
       profileCompletion: profileCompletion || 0,

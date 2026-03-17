@@ -24,6 +24,7 @@ import StudentProfile from './admin/components/StudentProfile';
 import OverallReports from './admin/components/OverallReports';
 import MentorAllocation from './admin/components/MentorAllocation';
 import PeopleOverview from './admin/components/PeopleOverview';
+import PrincipalDashboard from './admin/components/PrincipalDashboard';
 
 
 // Protected Route Component
@@ -44,6 +45,13 @@ const SuperAdminRoute = ({ element }) => {
   const isAuthenticated = localStorage.getItem('authToken');
   const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
   return isAuthenticated && userRole === 'superadmin' ? element : <Navigate to="/dashboard" />;
+};
+
+// Principal Protected Route Component
+const PrincipalRoute = ({ element }) => {
+  const isAuthenticated = localStorage.getItem('authToken');
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+  return isAuthenticated && userRole === 'principal' ? element : <Navigate to="/dashboard" />;
 };
 
 const App = () => {
@@ -85,6 +93,9 @@ const App = () => {
           <Route path="/superadmin/reports" element={<SuperAdminRoute element={<OverallReports />} />} />
           <Route path="/superadmin/allocation" element={<SuperAdminRoute element={<MentorAllocation />} />} />
           <Route path="/superadmin/overview" element={<SuperAdminRoute element={<PeopleOverview />} />} />
+
+          {/* Principal Routes */}
+          <Route path="/principal/dashboard" element={<PrincipalRoute element={<PrincipalDashboard />} />} />
 
           
         </Routes>

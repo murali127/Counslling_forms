@@ -117,7 +117,7 @@ function StudentProfile() {
               <Typography><strong>Mobile:</strong> {profile.mobileNumber}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography><strong>Section:</strong> {profile.section}</Typography>
+              <Typography><strong>Department:</strong> {profile.department}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography><strong>Admission Type:</strong> {profile.admissionType}</Typography>

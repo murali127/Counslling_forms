@@ -9,6 +9,7 @@ const xss = require('xss-clean');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
+const profileFieldsRoutes = require('./routes/profileFields');
 const adminRoutes = require('./routes/admin');
 const semesterRoutes = require('./routes/semester');
 const mentorGradingRouter = require('./routes/mentorGradingSchema');
@@ -57,6 +58,7 @@ app.get('/test', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/profile-fields', profileFieldsRoutes);
 app.use('/api/semester', semesterRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/mentorGrading', mentorGradingRouter);

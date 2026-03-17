@@ -9,7 +9,7 @@ const Profile = () => {
   const initialProfileState = {
     name: "",
     regdNo: "",
-    section: "",
+    department: "",
     mobileNumber: "",
     email: "",
     admissionType: "Convener",
@@ -45,6 +45,7 @@ const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,15 +69,28 @@ const [isLoading, setIsLoading] = useState(true);
         });
 
         if (response.data.success && response.data.profile) {
+          console.log("Profile loaded:", response.data.profile);
           setProfile(response.data.profile);
-          setFormData(response.data.profile);
+          // Merge profile data with initial state to ensure all fields exist
+          setFormData(prev => ({
+            ...prev,
+            ...response.data.profile
+          }));
           setIsNewUser(false);
         } else {
+          console.log("No profile found, new user");
           setIsNewUser(true);
-          // Get user email for the form
-          const userResponse = await apiClient.get("/api/auth/user", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+        }
+        
+        // Always fetch user role regardless of whether profile exists
+        const userResponse = await apiClient.get("/api/auth/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("User role:", userResponse.data.role);
+        setUserRole(userResponse.data.role || "");
+        
+        // If new user, also set email
+        if (!response.data.success || !response.data.profile) {
           setFormData(prev => ({
             ...prev,
             email: userResponse.data.email || ""
@@ -84,6 +98,7 @@ const [isLoading, setIsLoading] = useState(true);
         }
       } catch (error) {
         if (error.response?.status === 404) {
+          console.log("Profile not found (404)");
           setIsNewUser(true);
         } else {
           setError("Error fetching profile. Please try again.");
@@ -117,6 +132,30 @@ const [isLoading, setIsLoading] = useState(true);
     }));
   };
 
+  // Function to determine if a field should be disabled
+  const isFieldDisabled = (fieldName) => {
+    // If not in editing mode, freeze all fields
+    if (!isEditing && !isNewUser) {
+      return true;
+    }
+    
+    // Fields that are always editable when in edit/new mode
+    const alwaysEditableFields = ['name', 'mobileNumber', 'bloodGroup', 'profilePicture', 'dob'];
+    
+    // Check if field is in allowed list
+    if (alwaysEditableFields.includes(fieldName)) {
+      return false;
+    }
+    
+    // Department is editable for superadmin only
+    if (fieldName === 'department') {
+      return userRole !== 'superadmin';
+    }
+    
+    // All other fields should be disabled
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return; // Prevent double click
     
@@ -132,8 +171,17 @@ const [isLoading, setIsLoading] = useState(true);
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.regdNo || !formData.email) {
-        throw new Error("Name, Registration Number, and Email are required");
+      const requiredFields = ['name', 'email'];
+      if (userRole !== 'principal' && userRole !== 'superadmin') {
+        requiredFields.push('regdNo');
+      }
+      
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        const fieldNames = missingFields.map(field => 
+          field === 'regdNo' ? 'Registration Number' : field.charAt(0).toUpperCase() + field.slice(1)
+        ).join(', ');
+        throw new Error(`${fieldNames} ${missingFields.length === 1 ? 'is' : 'are'} required`);
       }
   
       // Clean up form data before sending
@@ -209,42 +257,58 @@ const [isLoading, setIsLoading] = useState(true);
           <div className="tab-content">
             <div className="form-row">
               <div className="form-group">
-                <label>Name:</label>
+                <label htmlFor="name-input">Name: <span style={{color: 'red'}}>*</span></label>
                 <input
+                  id="name-input"
                   name="name"
-                  value={formData.name}
+                  type="text"
+                  value={formData.name || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('name')}
+                  placeholder="Enter your name"
+                  style={{ display: 'block' }}
                 />
               </div>
               <div className="form-group">
-                <label>Registration Number:</label>
+                <label htmlFor="regdno-input">Registration Number:</label>
                 <input
+                  id="regdno-input"
                   name="regdNo"
-                  value={formData.regdNo}
+                  type="text"
+                  value={formData.regdNo || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('regdNo')}
+                  placeholder="Enter registration number"
+                  style={{ display: 'block' }}
                 />
               </div>
             </div>
             
             <div className="form-row">
               <div className="form-group">
-                <label>Section:</label>
+                <label htmlFor="department-input">Department:</label>
                 <input
-                  name="section"
-                  value={formData.section}
+                  id="department-input"
+                  name="department"
+                  type="text"
+                  value={formData.department || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('department')}
+                  placeholder="Enter department name"
+                  style={{ display: 'block' }}
                 />
               </div>
               <div className="form-group">
-                <label>Mobile Number:</label>
+                <label htmlFor="mobile-input">Mobile Number:</label>
                 <input
+                  id="mobile-input"
                   name="mobileNumber"
-                  value={formData.mobileNumber}
+                  type="tel"
+                  value={formData.mobileNumber || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('mobileNumber')}
+                  placeholder="Enter mobile number"
+                  style={{ display: 'block' }}
                 />
               </div>
             </div>
@@ -266,7 +330,7 @@ const [isLoading, setIsLoading] = useState(true);
                   name="admissionType"
                   value={formData.admissionType}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('admissionType')}
                 >
                   <option value="Convener">Convener</option>
                   <option value="Management">Management</option>
@@ -282,7 +346,7 @@ const [isLoading, setIsLoading] = useState(true);
                   name="caste"
                   value={formData.caste}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('caste')}
                 />
               </div>
               <div className="form-group">
@@ -291,29 +355,35 @@ const [isLoading, setIsLoading] = useState(true);
                   name="rank"
                   value={formData.rank}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('rank')}
                 />
               </div>
             </div>
             
             <div className="form-row">
               <div className="form-group">
-                <label>Date of Birth:</label>
+                <label htmlFor="dob-input">Date of Birth:</label>
                 <input
+                  id="dob-input"
                   name="dob"
                   type="date"
-                  value={formData.dob}
+                  value={formData.dob || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('dob')}
+                  style={{ display: 'block' }}
                 />
               </div>
               <div className="form-group">
-                <label>Blood Group:</label>
+                <label htmlFor="bloodgroup-input">Blood Group:</label>
                 <input
+                  id="bloodgroup-input"
                   name="bloodGroup"
-                  value={formData.bloodGroup}
+                  type="text"
+                  value={formData.bloodGroup || ''}
                   onChange={handleInputChange}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('bloodGroup')}
+                  placeholder="e.g., O+, A-, B+"
+                  style={{ display: 'block' }}
                 />
               </div>
             </div>
@@ -332,7 +402,7 @@ const [isLoading, setIsLoading] = useState(true);
                     type="number"
                     value={formData.tenthMarks.obtained}
                     onChange={(e) => handleNestedChange("tenthMarks", "obtained", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('tenthMarks')}
                   />
                 </div>
                 <div className="form-group">
@@ -341,7 +411,7 @@ const [isLoading, setIsLoading] = useState(true);
                     type="number"
                     value={formData.tenthMarks.max}
                     onChange={(e) => handleNestedChange("tenthMarks", "max", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('tenthMarks')}
                   />
                 </div>
                 <div className="form-group">
@@ -351,7 +421,7 @@ const [isLoading, setIsLoading] = useState(true);
                       type="number"
                       value={formData.tenthMarks.percentage}
                       onChange={(e) => handleNestedChange("tenthMarks", "percentage", e.target.value)}
-                      disabled={!isEditing && !isNewUser}
+                      disabled={isFieldDisabled('tenthMarks')}
                     />
                     <span className="input-suffix">%</span>
                   </div>
@@ -368,7 +438,7 @@ const [isLoading, setIsLoading] = useState(true);
                     type="number"
                     value={formData.interDiplomaMarks.obtained}
                     onChange={(e) => handleNestedChange("interDiplomaMarks", "obtained", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('interDiplomaMarks')}
                   />
                 </div>
                 <div className="form-group">
@@ -377,7 +447,7 @@ const [isLoading, setIsLoading] = useState(true);
                     type="number"
                     value={formData.interDiplomaMarks.max}
                     onChange={(e) => handleNestedChange("interDiplomaMarks", "max", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('interDiplomaMarks')}
                   />
                 </div>
                 <div className="form-group">
@@ -387,7 +457,7 @@ const [isLoading, setIsLoading] = useState(true);
                       type="number"
                       value={formData.interDiplomaMarks.percentage}
                       onChange={(e) => handleNestedChange("interDiplomaMarks", "percentage", e.target.value)}
-                      disabled={!isEditing && !isNewUser}
+                      disabled={isFieldDisabled('interDiplomaMarks')}
                     />
                     <span className="input-suffix">%</span>
                   </div>
@@ -408,7 +478,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.parentDetails.name}
                     onChange={(e) => handleNestedChange("parentDetails", "name", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('parentDetails')}
                   />
                 </div>
                 <div className="form-group">
@@ -416,7 +486,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.parentDetails.occupation}
                     onChange={(e) => handleNestedChange("parentDetails", "occupation", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('parentDetails')}
                   />
                 </div>
               </div>
@@ -426,7 +496,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.parentDetails.address}
                   onChange={(e) => handleNestedChange("parentDetails", "address", e.target.value)}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('parentDetails')}
                 />
               </div>
               
@@ -436,7 +506,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.parentDetails.contactNumber}
                     onChange={(e) => handleNestedChange("parentDetails", "contactNumber", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('parentDetails')}
                   />
                 </div>
                 <div className="form-group">
@@ -444,7 +514,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.parentDetails.email}
                     onChange={(e) => handleNestedChange("parentDetails", "email", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('parentDetails')}
                   />
                 </div>
               </div>
@@ -458,7 +528,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.localGuardian.name}
                     onChange={(e) => handleNestedChange("localGuardian", "name", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('localGuardian')}
                   />
                 </div>
                 <div className="form-group">
@@ -466,7 +536,7 @@ const [isLoading, setIsLoading] = useState(true);
                   <input
                     value={formData.localGuardian.contactNumber}
                     onChange={(e) => handleNestedChange("localGuardian", "contactNumber", e.target.value)}
-                    disabled={!isEditing && !isNewUser}
+                    disabled={isFieldDisabled('localGuardian')}
                   />
                 </div>
               </div>
@@ -476,7 +546,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.localGuardian.address}
                   onChange={(e) => handleNestedChange("localGuardian", "address", e.target.value)}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('localGuardian')}
                 />
               </div>
             </div>
@@ -493,7 +563,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.hobbies.join(", ")}
                   onChange={(e) => setFormData({...formData, hobbies: e.target.value.split(",").map(item => item.trim())})}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('hobbies')}
                   placeholder="e.g. Reading, Swimming, Chess"
                 />
               </div>
@@ -506,7 +576,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.participation.gamesAndActivities.join(", ")}
                   onChange={(e) => handleArrayChange("participation", "gamesAndActivities", e.target.value)}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('participation')}
                   placeholder="e.g. Basketball, Swimming, Drama Club"
                 />
               </div>
@@ -515,7 +585,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.participation.literary.join(", ")}
                   onChange={(e) => handleArrayChange("participation", "literary", e.target.value)}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('participation')}
                   placeholder="e.g. Debate, Poetry, Creative Writing"
                 />
               </div>
@@ -524,7 +594,7 @@ const [isLoading, setIsLoading] = useState(true);
                 <input
                   value={formData.participation.technical.join(", ")}
                   onChange={(e) => handleArrayChange("participation", "technical", e.target.value)}
-                  disabled={!isEditing && !isNewUser}
+                  disabled={isFieldDisabled('participation')}
                   placeholder="e.g. Robotics, Coding, Electronics"
                 />
               </div>

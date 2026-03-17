@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const User = require("../models/User");
 const Profile = require("../models/Profile");
+const { generateSimpleIdFromEmail } = require("../utils/idGenerator");
 const cloudinary = require("cloudinary").v2;
 const { authMiddleware, adminMiddleware } = require("../middlewares/authMiddleware");
 
@@ -79,12 +80,14 @@ router.get("/:regdNo", authMiddleware, async (req, res, next) => {
 router.post("/", authMiddleware, async (req, res, next) => {
   try {
     // Check if profile already exists
-    const existingProfile = await Profile.findOne({ 
-      $or: [
-        { userId: req.user.id },
-        { regdNo: req.body.regdNo }
-      ]
-    });
+    const orConditions = [{ userId: req.user.id }];
+    
+    // Only check regdNo if it's provided
+    if (req.body.regdNo) {
+      orConditions.push({ regdNo: req.body.regdNo });
+    }
+    
+    const existingProfile = await Profile.findOne({ $or: orConditions });
 
     if (existingProfile) {
       return errorResponse(res, 400, "Profile already exists for this user or registration number");
@@ -103,6 +106,13 @@ router.post("/", authMiddleware, async (req, res, next) => {
       // Ensure email matches user account
       email: user.email
     };
+    
+    // Remove empty regdNo to avoid unique constraint violations
+    if (!profileData.regdNo || profileData.regdNo.trim() === '') {
+      delete profileData.regdNo;
+      // Generate unique ID from email if no regdNo provided
+      profileData.uniqueId = generateSimpleIdFromEmail(user.email);
+    }
 
     const newProfile = await Profile.create(profileData);
     
@@ -133,7 +143,7 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
     const { id } = req.params;
 
     // Prevent changing certain fields
-    const restrictedFields = ['userId', 'regdNo', 'email'];
+    const restrictedFields = ['userId', 'regdNo', 'uniqueId', 'email'];
     restrictedFields.forEach(field => {
       if (req.body[field]) {
         return errorResponse(res, 400, `Cannot update ${field} field`);
@@ -174,7 +184,7 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
 router.patch("/", authMiddleware, async (req, res, next) => {
   try {
     // Check restricted fields first
-    const restrictedFields = ['userId', 'regdNo', 'email'];
+    const restrictedFields = ['userId', 'regdNo', 'uniqueId', 'email'];
     for (const field of restrictedFields) {
       if (req.body[field]) {
         return errorResponse(res, 400, `Cannot update ${field} field`);

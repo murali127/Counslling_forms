@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Profile = require('../models/Profile');
 const MentorGrading = require('../models/MentorGradingSchema');
 const Marks = require('../models/Semester');
+const { getEnabledProfileFields, calculateProfileCompletion } = require('../utils/profileFieldUtils');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -31,12 +32,14 @@ const restoreDeletedStudentRecord = async ({
   email,
   password,
   assignedMentorId,
-  yearOfStudy
+  yearOfStudy,
+  departmentId
 }) => {
   existingUser.username = username;
   existingUser.email = email;
   existingUser.password = password;
   existingUser.role = 'user';
+  existingUser.departmentId = departmentId;
   existingUser.assignedMentor = assignedMentorId;
   existingUser.isDeleted = false;
   existingUser.hasLoggedIn = false;
@@ -149,19 +152,15 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res, next) => 
 
     const users = await User.find(query).select('-password').lean();
     
+    // Get enabled profile fields (use null for institution-wide config)
+    const enabledFields = await getEnabledProfileFields(null);
+    
     // Calculate profileCompletion for each user
     const usersWithProfiles = await Promise.all(users.map(async (u) => {
       const profile = await Profile.findOne({ userId: u._id });
       let pc = 0;
       if (profile) {
-        const requiredFields = [
-          profile.name, profile.regdNo, profile.section, profile.mobileNumber, profile.email,
-          profile.admissionType, profile.caste, profile.rank, profile.dob, profile.bloodGroup,
-          profile.tenthMarks?.percentage, profile.interDiplomaMarks?.percentage,
-          profile.parentDetails?.name, profile.parentDetails?.address, profile.parentDetails?.occupation, profile.parentDetails?.contactNumber
-        ];
-        const answered = requiredFields.filter(f => f !== undefined && f !== null && String(f).trim() !== '').length;
-        pc = Math.round((answered / 16) * 100);
+        pc = calculateProfileCompletion(profile, enabledFields);
       }
       return { ...u, profileCompletion: pc };
     }));
@@ -223,7 +222,8 @@ router.post('/users', authMiddleware, adminMiddleware, async (req, res, next) =>
         email: normalizedEmail,
         password: hashedPassword,
         assignedMentorId,
-        yearOfStudy: normalizedYearOfStudy
+        yearOfStudy: normalizedYearOfStudy,
+        departmentId: req.user.departmentId
       });
 
       if (!normalizedYearOfStudy) {
@@ -248,6 +248,7 @@ router.post('/users', authMiddleware, adminMiddleware, async (req, res, next) =>
         email: normalizedEmail,
         password: hashedPassword,
         role: 'user', // Default role for added students
+        departmentId: req.user.departmentId,
         assignedMentor: assignedMentorId,
         yearOfStudy: normalizedYearOfStudy || 1, // Default to year 1 if not specified
         yearAssignmentMode: normalizedYearOfStudy ? 'manual' : 'auto'
@@ -312,8 +313,10 @@ router.post('/users/smart-create', authMiddleware, adminMiddleware, async (req, 
       return res.status(400).json({ error: 'Invalid numeric roll number range' });
     }
 
-    if ((endNum - startNum + 1) > 500) {
-      return res.status(400).json({ error: 'Please create at most 500 students per request' });
+    // Get admin's department ID
+    const adminDeptId = req.user.departmentId;
+    if (!adminDeptId) {
+      return res.status(400).json({ error: 'Admin must be assigned to a department' });
     }
 
     let assignedMentorId = null; // Students are created unassigned, mentors assigned via dedicated allocation page
@@ -350,7 +353,8 @@ router.post('/users/smart-create', authMiddleware, adminMiddleware, async (req, 
           email,
           password: hashedPassword,
           assignedMentorId,
-          yearOfStudy: normalizedYearOfStudy
+          yearOfStudy: normalizedYearOfStudy,
+          departmentId: adminDeptId
         });
 
         created.push({ _id: restoredUser._id, username, email, restored: true });
@@ -362,6 +366,7 @@ router.post('/users/smart-create', authMiddleware, adminMiddleware, async (req, 
         email,
         password: hashedPassword,
         role: 'user',
+        departmentId: adminDeptId,
         assignedMentor: assignedMentorId,
         yearOfStudy: normalizedYearOfStudy || 1, // Default to year 1 if not specified
         yearAssignmentMode: normalizedYearOfStudy ? 'manual' : 'auto'

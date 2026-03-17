@@ -4,7 +4,7 @@ import { TextField, Button, Grid, Typography, Container, Box } from '@mui/materi
 const CounselingForm = () => {
   const initialState = {
     regNo: '',
-    section: '',
+    department: '',
     mobile: '',
     studentName: '',
     email: '',
@@ -112,8 +112,8 @@ const CounselingForm = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                name="section"
-                label="Section"
+                name="department"
+                label="Department"
                 fullWidth
                 required
                 onChange={handleChange}

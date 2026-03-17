@@ -21,18 +21,44 @@ const Dashboard = () => {
       }
     
       try {
-        // Fetch user details from localStorage
         // Fetch user details from the backend
         const response = await apiClient.get('/api/auth/user', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
     
+        let displayName = response.data.username || 'User';
+        let profilePicture = '';
+        
+        // Try to fetch profile to get the name and picture from there
+        try {
+          const profileResponse = await apiClient.get('/api/profile', {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          
+          if (profileResponse.data.success && profileResponse.data.profile) {
+            // Use profile name if it exists
+            if (profileResponse.data.profile.name) {
+              displayName = profileResponse.data.profile.name;
+            }
+            // Use profile picture if it exists
+            if (profileResponse.data.profile.profilePicture) {
+              profilePicture = profileResponse.data.profile.profilePicture;
+            }
+          }
+        } catch (profileError) {
+          // Profile doesn't exist yet, that's OK - use username
+          console.log("No profile found, using username");
+        }
+        
         // Update the user state with backend data
         setUser({
-          name: response.data.username || 'User',
+          name: displayName,
           email: response.data.email || 'Not Available',
-          profilePicture: response.data.profilePicture || '',
-          role: response.data.role || 'user', profileCompletion: response.data.profileCompletion || 0, assignedMentor: response.data.assignedMentor });
+          profilePicture: profilePicture || response.data.profilePicture || '',
+          role: response.data.role || 'user', 
+          profileCompletion: response.data.profileCompletion || 0, 
+          assignedMentor: response.data.assignedMentor 
+        });
       } catch (error) {
         console.error('Error fetching user details:', error);
         if (error.response?.status === 401) {
@@ -42,7 +68,7 @@ const Dashboard = () => {
     };
     
     fetchUserDetails();
-  }, [navigate]); // Removed 'user' to prevent infinite loop
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
@@ -71,7 +97,7 @@ const Dashboard = () => {
         <h2 style={styles.bigText}>Hello, {user.name}!</h2>
         <p style={styles.smallText}>{user.email}</p>
         <div style={styles.stats}>
-          <p><strong>🎓 Role:</strong> {user.role === 'user' ? 'Student' : user.role === 'admin' ? 'Admin' : user.role === 'superadmin' ? 'Super Admin' : user.role}</p>
+          <p><strong>🎓 Role:</strong> {user.role === 'user' ? 'Student' : user.role === 'admin' ? 'Admin' : user.role === 'superadmin' ? 'Super Admin' : user.role === 'principal' ? 'Principal' : user.role}</p>
           <p><strong>📊 Profile Score:</strong> {user.profileCompletion}% Complete</p>
           <p><strong>🛡️ Account:</strong> Active</p>
           {user.assignedMentor && (
@@ -90,7 +116,6 @@ const Dashboard = () => {
         <div style={styles.buttonGroup}>
           <button onClick={handleLogout} style={styles.button}>Log Out</button>
           <button onClick={() => navigate('/profile')} style={styles.buttonSecondary}>My Profile</button>
-          <button onClick={() => navigate('/semester')} style={styles.buttonTertiary}>Semester Marks</button>
           
           {user.role === 'admin' && (
             <button onClick={() => navigate('/admin')} style={{
@@ -109,6 +134,16 @@ const Dashboard = () => {
               boxShadow: '0 4px 10px rgba(244, 67, 54, 0.3)',
             }}>
               Super Admin Panel
+            </button>
+          )}
+
+          {user.role === 'principal' && (
+            <button onClick={() => navigate('/principal/dashboard')} style={{
+              ...styles.button,
+              backgroundColor: '#4caf50',
+              boxShadow: '0 4px 10px rgba(76, 175, 80, 0.3)',
+            }}>
+              Principal Panel
             </button>
           )}
         </div>

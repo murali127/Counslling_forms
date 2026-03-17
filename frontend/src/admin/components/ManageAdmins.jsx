@@ -78,6 +78,18 @@ function ManageAdmins() {
     }
   };
 
+  const handleNotifyAdmin = async (adminId, email) => {
+    try {
+      await apiClient.post(`/api/superadmin/admins/${adminId}/notify`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
+      });
+      alert(`Notification sent to admin at ${email}`);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send notification');
+    }
+  };
+
   return (
     <div>
       <button onClick={() => navigate("/superadmin/dashboard")} style={{ marginBottom: "10px" }}>Back to Dashboard</button>
@@ -148,6 +160,9 @@ function ManageAdmins() {
                     Send Details
                   </button>
                 )}
+                <button onClick={() => handleNotifyAdmin(a._id, a.email)} style={{ marginRight: '8px', backgroundColor: '#1976d2', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+                  Notify
+                </button>
                 <button onClick={() => handleDeleteAdmin(a._id)} style={{ color: 'red' }}>Delete</button>
               </td>
             </tr>

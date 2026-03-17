@@ -152,7 +152,7 @@ const ConsolidatedCounselingForm = () => {
           <tbody>
             <tr>
               <td colSpan="2"><strong>Regd.No</strong><br/>{profile.regdNo}</td>
-              <td colSpan="2"><strong>Section</strong><br/>{profile.section}</td>
+              <td colSpan="2"><strong>Department</strong><br/>{profile.department}</td>
               <td colSpan="2"><strong>Mobile number</strong><br/>{profile.mobileNumber}</td>
               <td rowSpan="4" style={{width: '130px', height: '160px', textAlign: 'center', padding: '10px', verticalAlign: 'middle'}}>
                 {profile.profilePicture ? 
