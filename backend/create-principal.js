@@ -18,18 +18,16 @@ async function createPrincipal() {
 
     const principal = new User({
       username: 'principal',
-      email: 'principal@example.com',
+      email: 'majjiteja000@gmail.com',
       password: hashedPassword,
       role: 'principal'
     });
 
     await principal.save();
-    console.log('Principal user created successfully');
-    console.log('Email: principal@example.com');
-    console.log('Password: principal123');
+    console.log('Principal user created successfully:', principal.email);
 
   } catch (error) {
-    console.error('Error creating principal:', error);
+    console.error('Error creating principal user:', error);
   } finally {
     process.exit(0);
   }

@@ -114,7 +114,9 @@ const Auth = () => {
         navigate('/superadmin/dashboard');
       } else if (data.role === 'admin') {
           navigate('/admin');
-        } else {
+        } else if (data.role === 'master') {
+        navigate('/master/dashboard');
+      } else {
         navigate('/dashboard'); 
       }
     } catch (err) {

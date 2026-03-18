@@ -20,20 +20,21 @@ async function seedDepartments() {
     console.log('Connected to MongoDB');
 
     for (const dept of departments) {
-      const existing = await Department.findOne({ code: dept.code });
-      if (!existing) {
+      const existingDept = await Department.findOne({ code: dept.code });
+      if (!existingDept) {
         await Department.create(dept);
         console.log(`Created department: ${dept.name}`);
       } else {
-        console.log(`Department ${dept.name} already exists`);
+        console.log(`Department already exists: ${dept.name}`);
       }
     }
 
-    console.log('Seeding completed');
-    process.exit(0);
+    console.log('Department seeding completed');
+
   } catch (error) {
     console.error('Error seeding departments:', error);
-    process.exit(1);
+  } finally {
+    process.exit(0);
   }
 }
 

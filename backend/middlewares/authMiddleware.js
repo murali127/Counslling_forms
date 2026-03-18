@@ -71,10 +71,20 @@ const principalMiddleware = (req, res, next) => {
   }
 };
 
+// Master middleware
+const masterMiddleware = (req, res, next) => {
+  if (req.user && req.user.role === "master") {
+    next();
+  } else {
+    return res.status(403).json({ error: "Master access required" });
+  }
+};
+
 module.exports = {
   authMiddleware,
   adminMiddleware,
   mentorMiddleware,
   superAdminMiddleware,
-  principalMiddleware
+  principalMiddleware,
+  masterMiddleware
 };

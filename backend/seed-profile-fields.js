@@ -1,51 +1,38 @@
-// This script initializes default profile field configurations
-// Run with: node seed-profile-fields.js
+const mongoose = require('mongoose');
+const ProfileFieldConfig = require('./models/ProfileFieldConfig');
+require('dotenv').config();
 
-const dotenv = require('dotenv');
-dotenv.config();
+const profileFields = [
+  { fieldName: 'personalInfo', displayName: 'Personal Information', enabled: true },
+  { fieldName: 'contactInfo', displayName: 'Contact Information', enabled: true },
+  { fieldName: 'academicInfo', displayName: 'Academic Information', enabled: true },
+  { fieldName: 'familyInfo', displayName: 'Family Information', enabled: true },
+  { fieldName: 'addressInfo', displayName: 'Address Information', enabled: true },
+  { fieldName: 'additionalInfo', displayName: 'Additional Information', enabled: true }
+];
 
-const connectDB = require('./config/db');
-const { initializeDefaultFieldConfigs } = require('./utils/profileFieldUtils');
-
-const initializeFields = async () => {
+async function seedProfileFields() {
   try {
-    console.log('Connecting to database...');
-    await connectDB();
-    
-    console.log('Initializing default profile field configurations...');
-    await initializeDefaultFieldConfigs();
-    
-    console.log('✓ Profile field configurations initialized successfully');
-    console.log('\nDefault enabled fields for profile completion:');
-    console.log('- name');
-    console.log('- regdNo');
-    console.log('- section');
-    console.log('- mobileNumber');
-    console.log('- email');
-    console.log('- admissionType');
-    console.log('- caste');
-    console.log('- rank');
-    console.log('- dob');
-    console.log('- bloodGroup');
-    console.log('- tenthMarksPercentage');
-    console.log('- interDiplomaMarksPercentage');
-    console.log('- parentName');
-    console.log('- parentAddress');
-    console.log('- parentOccupation');
-    console.log('- parentContactNumber');
-    console.log('\nDisabled fields (can be enabled via API):');
-    console.log('- localGuardianName');
-    console.log('- localGuardianAddress');
-    console.log('- localGuardianContactNumber');
-    console.log('- hobbies');
-    console.log('- participation');
-    console.log('- profilePicture');
-    
-    process.exit(0);
-  } catch (error) {
-    console.error('Error initializing field configurations:', error);
-    process.exit(1);
-  }
-};
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Connected to MongoDB');
 
-initializeFields();
+    for (const field of profileFields) {
+      const existingField = await ProfileFieldConfig.findOne({ fieldName: field.fieldName });
+      if (!existingField) {
+        await ProfileFieldConfig.create(field);
+        console.log(`Created profile field: ${field.displayName}`);
+      } else {
+        console.log(`Profile field already exists: ${field.displayName}`);
+      }
+    }
+
+    console.log('Profile field seeding completed');
+
+  } catch (error) {
+    console.error('Error seeding profile fields:', error);
+  } finally {
+    process.exit(0);
+  }
+}
+
+seedProfileFields();

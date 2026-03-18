@@ -25,6 +25,7 @@ import OverallReports from './admin/components/OverallReports';
 import MentorAllocation from './admin/components/MentorAllocation';
 import PeopleOverview from './admin/components/PeopleOverview';
 import PrincipalDashboard from './admin/components/PrincipalDashboard';
+import MasterDashboard from './admin/components/MasterDashboard';
 
 
 // Protected Route Component
@@ -52,6 +53,13 @@ const PrincipalRoute = ({ element }) => {
   const isAuthenticated = localStorage.getItem('authToken');
   const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
   return isAuthenticated && userRole === 'principal' ? element : <Navigate to="/dashboard" />;
+};
+
+// Master Protected Route Component
+const MasterRoute = ({ element }) => {
+  const isAuthenticated = localStorage.getItem('authToken');
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+  return isAuthenticated && userRole === 'master' ? element : <Navigate to="/dashboard" />;
 };
 
 const App = () => {
@@ -96,6 +104,9 @@ const App = () => {
 
           {/* Principal Routes */}
           <Route path="/principal/dashboard" element={<PrincipalRoute element={<PrincipalDashboard />} />} />
+
+          {/* Master Routes */}
+          <Route path="/master/dashboard" element={<MasterRoute element={<MasterDashboard />} />} />
 
           
         </Routes>

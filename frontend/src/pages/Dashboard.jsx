@@ -59,6 +59,9 @@ const Dashboard = () => {
           profileCompletion: response.data.profileCompletion || 0, 
           assignedMentor: response.data.assignedMentor 
         });
+
+        // Update localStorage with the latest role
+        localStorage.setItem('userRole', response.data.role || 'user');
       } catch (error) {
         console.error('Error fetching user details:', error);
         if (error.response?.status === 401) {
@@ -97,7 +100,7 @@ const Dashboard = () => {
         <h2 style={styles.bigText}>Hello, {user.name}!</h2>
         <p style={styles.smallText}>{user.email}</p>
         <div style={styles.stats}>
-          <p><strong>🎓 Role:</strong> {user.role === 'user' ? 'Student' : user.role === 'admin' ? 'Admin' : user.role === 'superadmin' ? 'Super Admin' : user.role === 'principal' ? 'Principal' : user.role}</p>
+          <p><strong>🎓 Role:</strong> {user.role === 'user' ? 'Student' : user.role === 'admin' ? 'Admin' : user.role === 'superadmin' ? 'Super Admin' : user.role === 'principal' ? 'Principal' : user.role === 'master' ? 'Master' : user.role}</p>
           <p><strong>📊 Profile Score:</strong> {user.profileCompletion}% Complete</p>
           <p><strong>🛡️ Account:</strong> Active</p>
           {user.assignedMentor && (
@@ -144,6 +147,16 @@ const Dashboard = () => {
               boxShadow: '0 4px 10px rgba(76, 175, 80, 0.3)',
             }}>
               Principal Panel
+            </button>
+          )}
+
+          {user.role === 'master' && (
+            <button onClick={() => navigate('/master/dashboard')} style={{
+              ...styles.button,
+              backgroundColor: '#ff9800',
+              boxShadow: '0 4px 10px rgba(255, 152, 0, 0.3)',
+            }}>
+              Master Panel
             </button>
           )}
         </div>
