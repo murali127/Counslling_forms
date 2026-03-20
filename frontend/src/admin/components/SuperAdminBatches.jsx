@@ -136,7 +136,13 @@ function SuperAdminBatches() {
                         <td>{student.profile?.name || '-'}</td>
                         <td>{student.email}</td>
                         <td>{student.profile?.department || '-'}</td>
-                        <td>{student.yearOfStudy || '-'}</td>
+                        <td>
+                          {student.relieved || Number(student.yearOfStudy) === 5
+                            ? 'Relieved'
+                            : student.yearOfStudy
+                              ? `Year ${student.yearOfStudy}`
+                              : 'Unknown'}
+                        </td>
                         <td>
                           <button onClick={() => navigate(`/counseling-form-download/${regdNo}`)}>
                             Open Form

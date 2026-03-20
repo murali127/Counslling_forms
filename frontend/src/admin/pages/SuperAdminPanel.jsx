@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Container, Paper, Typography, Button, Grid, Divider, Card, CardContent } from '@mui/material';
+import { Box, Container, Paper, Typography, Button, Grid, Divider, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogActions, Alert, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../apiClient';
 
@@ -12,6 +12,13 @@ const SuperAdminPanel = () => {
     department: ''
   });
   const [loading, setLoading] = useState(true);
+
+  const [shiftModalOpen, setShiftModalOpen] = useState(false);
+  const [shiftLoading, setShiftLoading] = useState(false);
+  const [revertLoading, setRevertLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [statusSeverity, setStatusSeverity] = useState('success');
+  const [allStudents, setAllStudents] = useState([]);
 
   useEffect(() => {
     const fetchSuperAdminInfo = async () => {
@@ -53,6 +60,29 @@ const SuperAdminPanel = () => {
           department: departmentName
         });
 
+        const fetchStudents = async () => {
+          try {
+            const usersRes = await apiClient.get('/api/admin/users?role=user', config);
+            const studentsList = Array.isArray(usersRes.data) ? usersRes.data : [];
+            const transformed = studentsList.map((s) => ({
+              _id: s._id,
+              regdNo: s.username,
+              name: s.name || s.username,
+              yearOfStudy: Number(s.yearOfStudy) || 1,
+              relieved: Boolean(s.relieved)
+            }));
+            setAllStudents(transformed);
+
+            if (!localStorage.getItem('shiftedStudentsSnapshot')) {
+              localStorage.setItem('shiftedStudentsSnapshot', JSON.stringify(transformed));
+            }
+          } catch (fetchErr) {
+            console.warn('[SuperAdminPanel] could not fetch user list:', fetchErr);
+          }
+        };
+
+        fetchStudents();
+
         setLoading(false);
       } catch (err) {
         console.error('Error fetching superadmin info:', err);
@@ -72,6 +102,67 @@ const SuperAdminPanel = () => {
     localStorage.clear();
     sessionStorage.clear();
     navigate('/signup');
+  };
+
+  const resetStatus = () => {
+    setStatusMessage('');
+    setStatusSeverity('success');
+  };
+
+  const shiftYears = async () => {
+    if (shiftLoading || revertLoading) return;
+    setShiftLoading(true);
+    setStatusMessage('');
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const resp = await apiClient.post('/api/superadmin/shift-years', null, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setStatusMessage(`Shift completed: ${resp.data.promoted || 0} promoted, ${resp.data.relieved || 0} relieved.`);
+      setStatusSeverity('success');
+
+      // refresh students list
+      const studentsResp = await apiClient.get('/api/admin/all-batches-students', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAllStudents(studentsResp.data || []);
+    } catch (err) {
+      console.error('Shift Years error', err);
+      setStatusMessage(err.response?.data?.error || 'Failed to shift years.');
+      setStatusSeverity('error');
+    } finally {
+      setShiftLoading(false);
+    }
+  };
+
+  const revertShiftYears = async () => {
+    if (shiftLoading || revertLoading) return;
+    setRevertLoading(true);
+    setStatusMessage('');
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const resp = await apiClient.post('/api/superadmin/revert-shift-years', null, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setStatusMessage(`Revert completed: ${resp.data.reverted || 0} students restored.`);
+      setStatusSeverity('success');
+      localStorage.removeItem('superadminLastShiftSnapshot');
+
+      const studentsResp = await apiClient.get('/api/admin/all-batches-students', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAllStudents(studentsResp.data || []);
+    } catch (err) {
+      console.error('Revert Years error', err);
+      setStatusMessage(err.response?.data?.error || 'Failed to revert shift.');
+      setStatusSeverity('error');
+    } finally {
+      setRevertLoading(false);
+    }
   };
 
   if (loading) {
@@ -310,6 +401,29 @@ const SuperAdminPanel = () => {
               cursor: 'pointer',
               transition: 'all 0.3s',
               '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
+              background: 'linear-gradient(135deg, #4f7aeb 0%, #7c3bdb 100%)',
+              color: 'white'
+            }}
+            onClick={() => setShiftModalOpen(true)}
+          >
+            <span style={{ fontSize: 40, marginBottom: '10px' }}>🔁</span>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
+              Shift Years
+            </Typography>
+            <Typography variant="body2">
+              Promote students next year and mark final year relieved
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper
+            sx={{
+              padding: '30px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
               background: 'linear-gradient(135deg, #26a69a 0%, #00897b 100%)',
               color: 'white'
             }}
@@ -325,6 +439,58 @@ const SuperAdminPanel = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Dialog open={shiftModalOpen} onClose={() => setShiftModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Shift Years</DialogTitle>
+        <DialogContent>
+          {statusMessage && (
+            <Alert severity={statusSeverity} sx={{ mb: 2 }} onClose={resetStatus}>{statusMessage}</Alert>
+          )}
+
+          <Typography sx={{ mb: 2 }}>
+            This action moves:
+            <br />
+            • 1st → 2nd year
+            <br />
+            • 2nd → 3rd year
+            <br />
+            • 3rd → 4th year
+            <br />
+            • 4th → relieved (kept as record)
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 2, fontWeight: 'bold' }}>
+            Current totals
+          </Typography>
+          <Typography variant="body2">Active students: {allStudents.filter((s) => !s.relieved).length}</Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>Relieved students: {allStudents.filter((s) => s.relieved).length}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShiftModalOpen(false)} disabled={shiftLoading || revertLoading}>Cancel</Button>
+          <Button
+            color="error"
+            onClick={() => {
+              if (window.confirm('Revert will restore the previous year values and relieve status. Continue?')) {
+                revertShiftYears();
+              }
+            }}
+            disabled={revertLoading || shiftLoading}
+          >
+            {revertLoading ? <CircularProgress size={20} /> : 'Revert Back'}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (window.confirm('Shift years for all students as per rules?')) {
+                shiftYears();
+              }
+            }}
+            disabled={shiftLoading || revertLoading}
+          >
+            {shiftLoading ? <CircularProgress size={20} /> : 'Shift Years'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
