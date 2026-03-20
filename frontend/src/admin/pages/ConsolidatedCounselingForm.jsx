@@ -13,7 +13,6 @@ const ConsolidatedCounselingForm = () => {
   const [marks, setMarks] = useState(null);
   const [mentorGrading, setMentorGrading] = useState(null);
   const [error, setError] = useState('');
-  const [viewerRole, setViewerRole] = useState('user');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +23,6 @@ const ConsolidatedCounselingForm = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const userRes = await apiClient.get('/api/auth/user', config);
         const role = userRes.data?.role || 'user';
-        setViewerRole(role);
         let targetRegdNo = regdNo;
 
         if (role === 'user' || role === 'mentor') {
@@ -90,10 +88,7 @@ const ConsolidatedCounselingForm = () => {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}><CircularProgress /></Box>;
   if (error || !profile) return <Box sx={{ p: 4 }}><Typography color="error">{error || 'Profile not found'}</Typography></Box>;
 
-  const canPrint = viewerRole === 'user';
-
   const handlePrint = () => {
-    if (!canPrint) return;
     window.print();
   };
 
@@ -174,13 +169,7 @@ const ConsolidatedCounselingForm = () => {
 
       <Box className="no-print" sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Button variant="outlined" onClick={() => navigate(-1)}>Back</Button>
-        {canPrint ? (
-          <Button variant="contained" color="primary" onClick={handlePrint}>Print Form</Button>
-        ) : (
-          <Typography variant="body2" sx={{ color: 'text.secondary', alignSelf: 'center' }}>
-            Print is available only for student users.
-          </Typography>
-        )}
+        <Button variant="contained" color="primary" onClick={handlePrint}>Print Form</Button>
       </Box>
 
       <div id="printable-form" style={{fontFamily: 'Arial, sans-serif', color: '#000', backgroundColor: '#fff', padding: '10px'}}>

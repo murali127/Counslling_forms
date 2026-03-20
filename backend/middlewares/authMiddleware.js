@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const SystemSettings = require('../models/SystemSettings');
 
 const hasAnyRole = (userRole, allowedRoles = []) => {
   const hierarchy = {
@@ -35,6 +36,35 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'User not found' });
     }
     
+    if (user.role === 'user') {
+      const settings = await SystemSettings.findOne({ key: 'global' }).lean();
+      const windows = settings?.studentLoginWindowsByYear || {};
+      const currentYear = Number(user.yearOfStudy);
+
+      if (!Number.isInteger(currentYear) || currentYear < 1 || currentYear > 4) {
+        return res.status(403).json({ error: 'Your year of study is not configured. Contact admin to enable your login window.' });
+      }
+
+      const yearWindow = windows?.[`year${currentYear}`];
+      if (!yearWindow?.enabled || !yearWindow?.startAt || !yearWindow?.endAt) {
+        return res.status(403).json({ error: `Login window is not configured for Year ${currentYear}. Contact admin.` });
+      }
+
+      const startAt = new Date(yearWindow.startAt);
+      const endAt = new Date(yearWindow.endAt);
+      const now = new Date();
+
+      if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || startAt >= endAt) {
+        return res.status(403).json({ error: `Login window configuration is invalid for Year ${currentYear}. Contact admin.` });
+      }
+
+      if (now < startAt || now > endAt) {
+        return res.status(403).json({
+          error: `Login is currently closed for Year ${currentYear}. Allowed window: ${startAt.toISOString()} to ${endAt.toISOString()}`
+        });
+      }
+    }
+
     // Add user to request object
     req.user = user;
     next();

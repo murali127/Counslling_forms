@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import Header from './components/Header';
 import SupportChatWidget from './components/SupportChatWidget';
+import apiClient from './apiClient';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './pages/SignUp';
 import UserPanel from './pages/UserPanel';
@@ -21,8 +22,8 @@ import AdminAccessControl from './admin/pages/AdminAccessControl';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ActivateAccount from './pages/ActivateAccount';
-import SuperAdminDashboard from './admin/components/SuperAdminDashboard';
 import SuperAdminPanel from './admin/pages/SuperAdminPanel';
+import SuperAdminBatches from './admin/components/SuperAdminBatches';
 import ManageAdmins from './admin/components/ManageAdmins';
 import CreateAdmin from './admin/components/CreateAdmin';
 import StudentsList from './admin/components/StudentsList';
@@ -116,6 +117,25 @@ const MasterRoute = ({ element }) => {
 };
 
 const App = () => {
+  useEffect(() => {
+    const checkSession = async () => {
+      const token = localStorage.getItem('authToken');
+      const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+
+      if (!token || userRole !== 'user') return;
+
+      try {
+        await apiClient.get('/api/auth/user');
+      } catch (err) {
+        // Global interceptor handles logout and redirect for access-window denials.
+      }
+    };
+
+    checkSession();
+    const intervalId = setInterval(checkSession, 30000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <>
       <Router>
@@ -151,9 +171,10 @@ const App = () => {
           <Route path="/mentorgrade/:email" element={<ProtectedRoute element={<MentorGrading />} />} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminRoute element={<AdminDashboard />} />} />
+          <Route path="/admin" element={<AdminRoute element={<AdminPanel />} />} />
           <Route path="/admin/users" element={<AdminRoute element={<AdminUserManagement />} />} />
           <Route path="/admin/data-overview" element={<AdminRoute element={<AdminDataOverview />} />} />
+          <Route path="/admin/batches" element={<AdminRoute element={<SuperAdminBatches />} />} />
           <Route path="/admin/data" element={<AdminRoute element={<AdminDataOverview />} />} />
           <Route path="/admin/access-window" element={<AdminRoute element={<AdminAccessControl />} />} />
           <Route path="/admin/consolidated-form" element={<AdminRoute element={<Navigate to="/counseling-forms" replace />} />} />
@@ -161,14 +182,18 @@ const App = () => {
           <Route path="/consolidatedform" element={<AdminRoute element={<ConsolidatedCounselingForm />} />} />
 
           {/* Superadmin Routes */}
-          <Route path="/superadmin/dashboard" element={<SuperAdminRoute element={<SuperAdminDashboard />} />} />
+          <Route path="/superadmin/dashboard" element={<SuperAdminRoute element={<SuperAdminPanel />} />} />
           <Route path="/superadmin/admins" element={<SuperAdminRoute element={<ManageAdmins />} />} />
           <Route path="/superadmin/admins/create" element={<SuperAdminRoute element={<CreateAdmin />} />} />
           <Route path="/superadmin/students" element={<SuperAdminRoute element={<StudentsList />} />} />
           <Route path="/superadmin/students/:id" element={<SuperAdminRoute element={<StudentProfile />} />} />
           <Route path="/superadmin/reports" element={<SuperAdminRoute element={<OverallReports />} />} />
           <Route path="/superadmin/allocation" element={<SuperAdminRoute element={<MentorAllocation />} />} />
+          <Route path="/superadmin/batches" element={<SuperAdminRoute element={<SuperAdminBatches />} />} />
           <Route path="/superadmin/overview" element={<SuperAdminRoute element={<PeopleOverview />} />} />
+
+          {/* Shared all-batches route for admin/superadmin/principal/master */}
+          <Route path="/all-batches" element={<AdminRoute element={<SuperAdminBatches />} />} />
 
           {/* Principal Routes */}
           <Route path="/principal/dashboard" element={<PrincipalRoute element={<PrincipalDashboard />} />} />

@@ -5,7 +5,6 @@ const Profile = require("../models/Profile");
 const { generateSimpleIdFromEmail } = require("../utils/idGenerator");
 const cloudinary = require("cloudinary").v2;
 const { authMiddleware, adminMiddleware } = require("../middlewares/authMiddleware");
-const SystemSettings = require('../models/SystemSettings');
 
 dotenv.config();
 
@@ -25,38 +24,7 @@ const errorResponse = (res, status, message) => {
   });
 };
 
-const ensureStudentProfileWindowOpen = async (req, res) => {
-  if (!req.user || req.user.role !== 'user') return true;
-
-  const settings = await SystemSettings.findOne({ key: 'global' }).lean();
-  const window = settings?.studentProfileWindow;
-
-  if (!window?.enabled) {
-    return true;
-  }
-
-  const startAt = window.startAt ? new Date(window.startAt) : null;
-  const endAt = window.endAt ? new Date(window.endAt) : null;
-  const now = new Date();
-
-  const isOpen = !!(
-    startAt &&
-    endAt &&
-    !Number.isNaN(startAt.getTime()) &&
-    !Number.isNaN(endAt.getTime()) &&
-    now >= startAt &&
-    now <= endAt
-  );
-
-  if (isOpen) return true;
-
-  const windowText = startAt && endAt
-    ? `from ${startAt.toISOString()} to ${endAt.toISOString()}`
-    : 'during the configured access window';
-
-  errorResponse(res, 403, `Profile editing is currently closed for students. Editing is allowed only ${windowText}.`);
-  return false;
-};
+const ensureStudentProfileWindowOpen = async () => true;
 
 /**
  * @route GET /api/profile

@@ -5,10 +5,14 @@ import apiClient from '../../apiClient';
 
 const AdminAccessControl = () => {
   const navigate = useNavigate();
-  const [enabled, setEnabled] = useState(false);
-  const [startAt, setStartAt] = useState('');
-  const [endAt, setEndAt] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
+  const [windows, setWindows] = useState([
+    { year: 1, enabled: false, startAt: '', endAt: '', isOpen: false },
+    { year: 2, enabled: false, startAt: '', endAt: '', isOpen: false },
+    { year: 3, enabled: false, startAt: '', endAt: '', isOpen: false },
+    { year: 4, enabled: false, startAt: '', endAt: '', isOpen: false }
+  ]);
+  const [assignedCountsByYear, setAssignedCountsByYear] = useState({ 1: 0, 2: 0, 3: 0, 4: 0 });
+  const [notifyStudents, setNotifyStudents] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -26,13 +30,22 @@ const AdminAccessControl = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('authToken');
-      const res = await apiClient.get('/api/admin/student-profile-window', {
+      const res = await apiClient.get('/api/admin/student-login-windows', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setEnabled(Boolean(res.data.enabled));
-      setIsOpen(Boolean(res.data.isOpen));
-      setStartAt(toLocalDatetimeInput(res.data.startAt));
-      setEndAt(toLocalDatetimeInput(res.data.endAt));
+
+      const nextRows = (res.data.windows || []).map((row) => ({
+        year: Number(row.year),
+        enabled: Boolean(row.enabled),
+        startAt: toLocalDatetimeInput(row.startAt),
+        endAt: toLocalDatetimeInput(row.endAt),
+        isOpen: Boolean(row.isOpen)
+      }));
+
+      if (nextRows.length === 4) {
+        setWindows(nextRows);
+      }
+      setAssignedCountsByYear(res.data.assignedStudentCountsByYear || { 1: 0, 2: 0, 3: 0, 4: 0 });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load current access window settings.');
     } finally {
@@ -51,22 +64,30 @@ const AdminAccessControl = () => {
       setError('');
       setMessage('');
 
-      if (enabled && (!startAt || !endAt)) {
-        setError('Start and end date/time are required when window is enabled.');
-        setSaving(false);
-        return;
+      for (const row of windows) {
+        if (row.enabled && (!row.startAt || !row.endAt)) {
+          setError(`Year ${row.year}: start and end date/time are required when enabled.`);
+          setSaving(false);
+          return;
+        }
       }
 
       const token = localStorage.getItem('authToken');
-      await apiClient.put('/api/admin/student-profile-window', {
-        enabled,
-        startAt: enabled ? new Date(startAt).toISOString() : null,
-        endAt: enabled ? new Date(endAt).toISOString() : null
-      }, {
+      const payload = {
+        windows: windows.map((row) => ({
+          year: row.year,
+          enabled: row.enabled,
+          startAt: row.enabled && row.startAt ? new Date(row.startAt).toISOString() : null,
+          endAt: row.enabled && row.endAt ? new Date(row.endAt).toISOString() : null
+        })),
+        notifyStudents
+      };
+
+      await apiClient.put('/api/admin/student-login-windows', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setMessage('Student profile access window saved successfully.');
+      setMessage('Year-wise student login windows saved successfully.');
       await fetchWindow();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save settings.');
@@ -78,45 +99,77 @@ const AdminAccessControl = () => {
   return (
     <Box sx={{ padding: '20px', maxWidth: '900px', margin: 'auto' }}>
       <Typography variant="h4" gutterBottom>
-        Student Access Window Control
+        Student Login Window Control (Year Wise)
       </Typography>
 
       <Paper sx={{ p: 3, mb: 2 }}>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          Control when students can create or update their profiles. Outside this window, student profile editing will be blocked.
+          Configure login windows separately for Year 1, Year 2, Year 3, and Year 4. Students can log in only during the enabled window for their own year.
         </Typography>
 
         {loading ? (
           <Typography>Loading current settings...</Typography>
         ) : (
           <>
+            {windows.map((row, idx) => (
+              <Paper key={row.year} variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Year {row.year} ({assignedCountsByYear[row.year] || 0} assigned students)
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={row.enabled}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setWindows((prev) => prev.map((r, rIdx) => (
+                          rIdx === idx ? { ...r, enabled: checked } : r
+                        )));
+                      }}
+                    />
+                  }
+                  label={`Enable login window for Year ${row.year}`}
+                />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
+                  <TextField
+                    label="Start date/time"
+                    type="datetime-local"
+                    value={row.startAt}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setWindows((prev) => prev.map((r, rIdx) => (
+                        rIdx === idx ? { ...r, startAt: value } : r
+                      )));
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    disabled={!row.enabled}
+                  />
+                  <TextField
+                    label="End date/time"
+                    type="datetime-local"
+                    value={row.endAt}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setWindows((prev) => prev.map((r, rIdx) => (
+                        rIdx === idx ? { ...r, endAt: value } : r
+                      )));
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    disabled={!row.enabled}
+                  />
+                </Box>
+
+                <Alert severity={row.isOpen ? 'success' : 'warning'} sx={{ mt: 2 }}>
+                  Current status: {row.isOpen ? 'OPEN' : 'CLOSED'}
+                </Alert>
+              </Paper>
+            ))}
+
             <FormControlLabel
-              control={<Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
-              label="Enable student profile access window"
+              control={<Switch checked={notifyStudents} onChange={(e) => setNotifyStudents(e.target.checked)} />}
+              label="Send email notification to all assigned students for enabled years"
             />
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
-              <TextField
-                label="Start date/time"
-                type="datetime-local"
-                value={startAt}
-                onChange={(e) => setStartAt(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                disabled={!enabled}
-              />
-              <TextField
-                label="End date/time"
-                type="datetime-local"
-                value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                disabled={!enabled}
-              />
-            </Box>
-
-            <Alert severity={isOpen ? 'success' : 'warning'} sx={{ mt: 2 }}>
-              Current window status: {isOpen ? 'OPEN' : 'CLOSED'}
-            </Alert>
 
             {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
             {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
@@ -125,7 +178,7 @@ const AdminAccessControl = () => {
               <Button variant="contained" onClick={handleSave} disabled={saving}>
                 {saving ? 'Saving...' : 'Save Settings'}
               </Button>
-              <Button variant="outlined" onClick={() => navigate('/admin')}>
+              <Button variant="outlined" onClick={() => navigate('/admin-panel')}>
                 Back to Admin Dashboard
               </Button>
             </Box>

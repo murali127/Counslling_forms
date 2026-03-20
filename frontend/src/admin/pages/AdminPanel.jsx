@@ -198,14 +198,14 @@ const AdminPanel = () => {
               background: 'linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/counseling-forms')}
+            onClick={() => navigate('/admin/users')}
           >
               <span style={{ fontSize: 40, marginBottom: '10px' }}>👥</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Student Data
+              Manage Students
             </Typography>
             <Typography variant="body2">
-              View and manage student information
+              CRUD operations for students assigned to you
             </Typography>
           </Paper>
         </Grid>
@@ -228,7 +228,7 @@ const AdminPanel = () => {
               Semester Marks
             </Typography>
             <Typography variant="body2">
-              Edit student semester marks
+              View and update semester marks for assigned students
             </Typography>
           </Paper>
         </Grid>
@@ -251,7 +251,7 @@ const AdminPanel = () => {
               Mentor Grading
             </Typography>
             <Typography variant="body2">
-              Manage student mentor grades
+              Mentor grade assigned students year-wise
             </Typography>
           </Paper>
         </Grid>
@@ -274,7 +274,7 @@ const AdminPanel = () => {
               Attendance
             </Typography>
             <Typography variant="body2">
-              Manage student attendance records
+              View attendance of assigned students
             </Typography>
           </Paper>
         </Grid>
@@ -297,7 +297,7 @@ const AdminPanel = () => {
               Access Control
             </Typography>
             <Typography variant="body2">
-              Configure student login window
+              Configure year-wise login windows and notify students
             </Typography>
           </Paper>
         </Grid>
@@ -320,7 +320,30 @@ const AdminPanel = () => {
               Counseling Forms
             </Typography>
             <Typography variant="body2">
-              Download counseling forms for assigned students
+              View and print counseling forms of assigned students
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper
+            sx={{
+              padding: '30px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
+              background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+              color: 'white'
+            }}
+            onClick={() => navigate('/all-batches')}
+          >
+              <span style={{ fontSize: 40, marginBottom: '10px' }}>🗂️</span>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
+              All Batches
+            </Typography>
+            <Typography variant="body2">
+              Year-wise (1 to 4) list with counseling form print access
             </Typography>
           </Paper>
         </Grid>

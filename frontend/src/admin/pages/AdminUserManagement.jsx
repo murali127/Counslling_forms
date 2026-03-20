@@ -293,7 +293,7 @@ const AdminUserManagement = () => {
       </Alert>
 
       <Box sx={{ marginBottom: '20px' }}>
-        <Button variant="contained" onClick={() => navigate('/admin')} sx={{ marginRight: '10px' }}>
+        <Button variant="contained" onClick={() => navigate('/admin-panel')} sx={{ marginRight: '10px' }}>
           Back to Admin Dashboard
         </Button>
         <Button variant="outlined" onClick={() => navigate('/admin/data')} sx={{ marginRight: '10px' }}>

@@ -174,27 +174,21 @@ const [isLoading, setIsLoading] = useState(true);
     if (!isEditing && !isNewUser) {
       return true;
     }
-    
-    // Fields that are always editable when in edit/new mode
-    const alwaysEditableFields = ['name', 'mobileNumber', 'bloodGroup', 'profilePicture', 'dob'];
-    
-    // Check if field is in allowed list
-    if (alwaysEditableFields.includes(fieldName)) {
+
+    // Keep identity fields immutable after first create.
+    if (fieldName === 'email') {
+      return true;
+    }
+    if (fieldName === 'regdNo') {
+      return !isNewUser;
+    }
+
+    // Student users can edit all other profile details while editing/creating.
+    if (userRole === 'user') {
       return false;
     }
 
-    // New students must be able to set/adjust regdNo on first profile creation
-    if (fieldName === 'regdNo') {
-      return !(isNewUser && userRole === 'user');
-    }
-    
-    // Department is editable for superadmin only
-    if (fieldName === 'department') {
-      return userRole !== 'superadmin';
-    }
-    
-    // All other fields should be disabled
-    return true;
+    return false;
   };
 
   const handleSubmit = async () => {
@@ -424,6 +418,342 @@ const [isLoading, setIsLoading] = useState(true);
                           email: profile?.email || '',
                           mobileNumber: profile?.mobileNumber || '',
                           dob: profile?.dob || ''
+                        }));
+                        setIsEditing(false);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === 'superadmin') {
+    return (
+      <div className="profile-container">
+        <div className="profile-header">
+          <h1>Super Admin Profile</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/superadmin-panel')}
+          >
+            Back to Super Admin Panel
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+
+        <div className="profile-content">
+          <div className="card" style={{ width: '100%' }}>
+            <h3>Basic Details</h3>
+            
+            {(isEditing || isNewUser) && (
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Profile Picture</label>
+                {formData.profilePicture ? (
+                  <img 
+                    src={formData.profilePicture} 
+                    alt="Profile" 
+                    style={{ maxWidth: '150px', maxHeight: '150px', marginBottom: '10px', borderRadius: '5px' }}
+                  />
+                ) : (
+                  <div style={{ width: '150px', height: '150px', backgroundColor: '#e0e0e0', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
+                    {formData.name ? formData.name.charAt(0).toUpperCase() : "?"}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({...formData, profilePicture: reader.result});
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  style={{ display: 'block' }}
+                />
+              </div>
+            )}
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>Name <span style={{color: 'red'}}>*</span></label>
+                <input
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  name="email"
+                  value={formData.email || ''}
+                  onChange={handleInputChange}
+                  disabled
+                  className="disabled-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Mobile Number</label>
+                <input
+                  name="mobileNumber"
+                  type="tel"
+                  value={formData.mobileNumber || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter mobile number"
+                />
+              </div>
+              <div className="form-group">
+                <label>Date of Birth</label>
+                <input
+                  name="dob"
+                  type="date"
+                  value={formData.dob || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Department</label>
+                <input
+                  name="department"
+                  type="text"
+                  value={formData.department || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter department"
+                />
+              </div>
+            </div>
+
+            <div className="profile-actions" style={{ marginTop: '20px' }}>
+              {!isEditing && !isNewUser ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="action-buttons">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Profile'}
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      if (isNewUser) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || prev.name || '',
+                          email: profile?.email || prev.email || '',
+                          mobileNumber: '',
+                          dob: '',
+                          department: '',
+                          profilePicture: ''
+                        }));
+                      } else {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || '',
+                          email: profile?.email || '',
+                          mobileNumber: profile?.mobileNumber || '',
+                          dob: profile?.dob || '',
+                          department: profile?.department || '',
+                          profilePicture: profile?.profilePicture || ''
+                        }));
+                        setIsEditing(false);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === 'admin') {
+    return (
+      <div className="profile-container">
+        <div className="profile-header">
+          <h1>Admin Profile</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/admin-panel')}
+          >
+            Back to Admin Panel
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+
+        <div className="profile-content">
+          <div className="card" style={{ width: '100%' }}>
+            <h3>Basic Details</h3>
+
+            {(isEditing || isNewUser) && (
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Profile Picture</label>
+                {formData.profilePicture ? (
+                  <img
+                    src={formData.profilePicture}
+                    alt="Profile"
+                    style={{ maxWidth: '150px', maxHeight: '150px', marginBottom: '10px', borderRadius: '5px' }}
+                  />
+                ) : (
+                  <div style={{ width: '150px', height: '150px', backgroundColor: '#e0e0e0', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
+                    {formData.name ? formData.name.charAt(0).toUpperCase() : '?'}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setFormData({ ...formData, profilePicture: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  style={{ display: 'block' }}
+                />
+              </div>
+            )}
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Name <span style={{ color: 'red' }}>*</span></label>
+                <input
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  name="email"
+                  value={formData.email || ''}
+                  onChange={handleInputChange}
+                  disabled
+                  className="disabled-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Mobile Number</label>
+                <input
+                  name="mobileNumber"
+                  type="tel"
+                  value={formData.mobileNumber || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter mobile number"
+                />
+              </div>
+              <div className="form-group">
+                <label>Date of Birth</label>
+                <input
+                  name="dob"
+                  type="date"
+                  value={formData.dob || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Department</label>
+                <input
+                  name="department"
+                  type="text"
+                  value={formData.department || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                  placeholder="Enter department"
+                />
+              </div>
+            </div>
+
+            <div className="profile-actions" style={{ marginTop: '20px' }}>
+              {!isEditing && !isNewUser ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="action-buttons">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Profile'}
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      if (isNewUser) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || prev.name || '',
+                          email: profile?.email || prev.email || '',
+                          mobileNumber: '',
+                          dob: '',
+                          department: '',
+                          profilePicture: ''
+                        }));
+                      } else {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || '',
+                          email: profile?.email || '',
+                          mobileNumber: profile?.mobileNumber || '',
+                          dob: profile?.dob || '',
+                          department: profile?.department || '',
+                          profilePicture: profile?.profilePicture || ''
                         }));
                         setIsEditing(false);
                       }

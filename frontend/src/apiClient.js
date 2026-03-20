@@ -50,6 +50,22 @@ apiClient.interceptors.response.use(
           }
         }
       }
+
+      if (error.response.status === 403) {
+        const policyError = String(error.response.data?.error || '').toLowerCase();
+        const shouldForceLogout = (
+          policyError.includes('login window') ||
+          policyError.includes('login is currently closed') ||
+          policyError.includes('year of study is not configured')
+        );
+
+        if (shouldForceLogout) {
+          localStorage.clear();
+          if (window.location.pathname !== '/' && window.location.pathname !== '/signup') {
+            window.location.href = '/';
+          }
+        }
+      }
     } else if (error.request) {
       // The request was made but no response was received (or it timed out)
       customError.message = error.code === 'ECONNABORTED' 

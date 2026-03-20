@@ -98,10 +98,10 @@ const CounselingFormsHub = () => {
 
   const roleHint =
     role === 'admin'
-      ? 'You can view counseling forms only for students assigned to you. Print is available only for users.'
+      ? 'You can view and print counseling forms only for students assigned to you.'
       : HIGHER_ROLES.includes(role)
-        ? 'You can view counseling forms for any student. Print is available only for users.'
-        : 'You can open and print only your own counseling form.';
+        ? 'You can view and print counseling forms for any student.'
+        : 'You can open and print your own counseling form.';
 
   return (
     <Box sx={{ p: 3, maxWidth: '1100px', margin: 'auto' }}>
@@ -157,7 +157,7 @@ const CounselingFormsHub = () => {
                         size="small"
                         onClick={() => navigate(`/counseling-form-download/${row.regdNo}`)}
                       >
-                        {role === 'user' || role === 'mentor' ? 'Open / Print' : 'View Form'}
+                        Open / Print
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -64,6 +64,9 @@ function OverallReports() {
   return (
     <div style={{ padding: "20px" }}>
       <button onClick={() => navigate("/superadmin/dashboard")} style={{ marginBottom: "10px" }}>Back to Dashboard</button>
+      <button onClick={() => navigate('/attendance')} style={{ marginBottom: '10px', marginLeft: '10px' }}>
+        Open Attendance Reports
+      </button>
       
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
         <input placeholder="Registration Year (e.g. 2022)" value={registrationYear} onChange={e => setRegistrationYear(e.target.value)} />

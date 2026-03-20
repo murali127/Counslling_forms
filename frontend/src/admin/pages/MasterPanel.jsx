@@ -290,7 +290,7 @@ const MasterPanel = () => {
               background: 'linear-gradient(135deg, #26a69a 0%, #00897b 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/master/manage?section=batches')}
+            onClick={() => navigate('/all-batches')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>🧮</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
@@ -298,6 +298,29 @@ const MasterPanel = () => {
             </Typography>
             <Typography variant="body2">
               View students by batch and open forms
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper
+            sx={{
+              padding: '30px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
+              background: 'linear-gradient(135deg, #ff6f00 0%, #e65100 100%)',
+              color: 'white'
+            }}
+            onClick={() => navigate('/attendance')}
+          >
+            <span style={{ fontSize: 40, marginBottom: '10px' }}>📊</span>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
+              Attendance Reports
+            </Typography>
+            <Typography variant="body2">
+              View semester-wise attendance reports
             </Typography>
           </Paper>
         </Grid>

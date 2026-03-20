@@ -175,14 +175,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #f44336 0%, #e91e63 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/superadmin/dashboard?action=admins')}
+            onClick={() => navigate('/superadmin/admins')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>👤</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
               Manage Admins
             </Typography>
             <Typography variant="body2">
-              Create and manage admin accounts
+              CRUD admin accounts and optional student assignment
             </Typography>
           </Paper>
         </Grid>
@@ -198,14 +198,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/superadmin/dashboard?action=students')}
+            onClick={() => navigate('/superadmin/students')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>👥</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              View Students
+              Manage Students
             </Typography>
             <Typography variant="body2">
-              Manage student records
+              CRUD students and assign students to admins
             </Typography>
           </Paper>
         </Grid>
@@ -221,14 +221,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/superadmin/dashboard?action=allocation')}
+            onClick={() => navigate('/superadmin/allocation')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>✅</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
               Mentor Allocation
             </Typography>
             <Typography variant="body2">
-              Assign students to mentors
+              Manual and random student allocation to admins
             </Typography>
           </Paper>
         </Grid>
@@ -244,14 +244,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/superadmin/dashboard?action=reports')}
+            onClick={() => navigate('/superadmin/reports')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>📈</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
               Reports
             </Typography>
             <Typography variant="body2">
-              View overall system reports
+              Profile reports with attendance report access
             </Typography>
           </Paper>
         </Grid>
@@ -267,14 +267,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/superadmin/dashboard?action=overview')}
+            onClick={() => navigate('/counseling-forms')}
           >
-            <span style={{ fontSize: 40, marginBottom: '10px' }}>📦</span>
+            <span style={{ fontSize: 40, marginBottom: '10px' }}>📄</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Data Overview
+              Counseling Forms
             </Typography>
             <Typography variant="body2">
-              View detailed system overview
+              Open counseling forms data page
             </Typography>
           </Paper>
         </Grid>
@@ -290,14 +290,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/counseling-forms')}
+            onClick={() => navigate('/all-batches')}
           >
-            <span style={{ fontSize: 40, marginBottom: '10px' }}>⭐</span>
+            <span style={{ fontSize: 40, marginBottom: '10px' }}>🧮</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Counseling Forms
+              All Batches
             </Typography>
             <Typography variant="body2">
-              Download counseling forms of any student
+              View batch-wise student data from DB
             </Typography>
           </Paper>
         </Grid>
@@ -313,60 +313,14 @@ const SuperAdminPanel = () => {
               background: 'linear-gradient(135deg, #26a69a 0%, #00897b 100%)',
               color: 'white'
             }}
-            onClick={() => navigate('/semester')}
-          >
-            <span style={{ fontSize: 40, marginBottom: '10px' }}>📝</span>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Semester Marks
-            </Typography>
-            <Typography variant="body2">
-              Open semester marks management
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Paper
-            sx={{
-              padding: '30px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
-              background: 'linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%)',
-              color: 'white'
-            }}
             onClick={() => navigate('/mentorgrade')}
           >
             <span style={{ fontSize: 40, marginBottom: '10px' }}>⭐</span>
             <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Mentor Grading
+              Admin Panel
             </Typography>
             <Typography variant="body2">
-              Open mentor grading management
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Paper
-            sx={{
-              padding: '30px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              '&:hover': { boxShadow: 5, transform: 'translateY(-5px)' },
-              background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
-              color: 'white'
-            }}
-            onClick={() => navigate('/attendance')}
-          >
-            <span style={{ fontSize: 40, marginBottom: '10px' }}>✅</span>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              Attendance
-            </Typography>
-            <Typography variant="body2">
-              Open semester-wise attendance
+              Mentor grading page
             </Typography>
           </Paper>
         </Grid>

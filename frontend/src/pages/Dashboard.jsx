@@ -124,7 +124,7 @@ const Dashboard = () => {
           <button onClick={() => navigate('/mentorgrade')} style={styles.buttonTertiary}>Mentor Grading</button>
           
           {user.role === 'admin' && (
-            <button onClick={() => navigate('/admin')} style={{
+            <button onClick={() => navigate('/admin-panel')} style={{
               ...styles.button,
               backgroundColor: '#9c27b0',
               boxShadow: '0 4px 10px rgba(156, 39, 176, 0.3)',
@@ -134,7 +134,7 @@ const Dashboard = () => {
           )}
 
           {user.role === 'superadmin' && (
-            <button onClick={() => navigate('/superadmin/dashboard')} style={{
+            <button onClick={() => navigate('/superadmin-panel')} style={{
               ...styles.button,
               backgroundColor: '#f44336',
               boxShadow: '0 4px 10px rgba(244, 67, 54, 0.3)',

@@ -184,10 +184,10 @@ const Header = () => {
   const handleLogoClick = () => {
     if (isAuthenticated) {
       const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
-      if (userRole === 'superadmin') navigate('/superadmin/dashboard');
+      if (userRole === 'superadmin') navigate('/superadmin-panel');
       else if (userRole === 'principal') navigate('/principal/dashboard');
       else if (userRole === 'master') navigate('/master/dashboard');
-      else if (userRole === 'admin') navigate('/admin');
+      else if (userRole === 'admin') navigate('/admin-panel');
       else navigate('/dashboard');
     } else {
       navigate('/landingpage');
