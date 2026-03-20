@@ -7,6 +7,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.11",
     "@szhsin/react-accordion": "^1.4.0",
+    "ajv": "^8.18.0",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
     "browserslist": "^4.28.1",

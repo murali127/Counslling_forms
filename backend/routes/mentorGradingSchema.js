@@ -29,6 +29,7 @@ router.post('/:email', async (req, res, next) => {
         email,
         grading: gradingData.grading,
         remarks: gradingData.remarks,
+        dates: gradingData.dates,
         placement: gradingData.placement,
         higherEducation: gradingData.higherEducation,
         initials: gradingData.initials,
@@ -48,7 +49,37 @@ router.get('/:email', async (req, res, next) => {
     const mentorGrading = await MentorGrading.findOne({ email });
 
     if (!mentorGrading) {
-      return res.status(404).json({ message: 'Mentor grading not found' });
+      return res.status(200).json({
+        email,
+        grading: {
+          generalDiscipline: [],
+          communicationSkills: [],
+          generalGrooming: [],
+          behaviorWithPeers: [],
+          behaviorWithFaculty: [],
+          coCurricularActivities: [],
+          extracurricularActivities: [],
+          behaviorInHostel: [],
+          overallGrading: [],
+          disciplinaryActions: [],
+        },
+        remarks: [],
+        dates: [],
+        placement: {
+          companyName: '',
+          jobRole: '',
+          package: null,
+        },
+        higherEducation: {
+          universityName: '',
+          courseName: '',
+          country: '',
+        },
+        initials: {
+          student: [],
+          mentor: [],
+        }
+      });
     }
 
     return res.status(200).json(mentorGrading);

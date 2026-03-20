@@ -10,6 +10,7 @@ const { getEnabledProfileFields, calculateProfileCompletion } = require('../util
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const SystemSettings = require('../models/SystemSettings');
 
 const ROLL_NUMBER_REGEX = /^\d{12}$/;
 
@@ -25,6 +26,41 @@ const normalizeYearOfStudy = (value) => {
 };
 
 const getAdmissionPrefix = (rollNumber) => normalizeRollNumber(rollNumber).slice(0, 3);
+
+const getOrCreateGlobalSettings = async () => {
+  let settings = await SystemSettings.findOne({ key: 'global' });
+  if (!settings) {
+    settings = await SystemSettings.create({ key: 'global' });
+  }
+  return settings;
+};
+
+const toYearWindowResponse = (windows = {}) => {
+  const now = new Date();
+  return [1, 2, 3, 4].map((year) => {
+    const key = `year${year}`;
+    const row = windows[key] || {};
+    const startAt = row.startAt ? new Date(row.startAt) : null;
+    const endAt = row.endAt ? new Date(row.endAt) : null;
+    const isOpen = !!(
+      row.enabled &&
+      startAt &&
+      endAt &&
+      !Number.isNaN(startAt.getTime()) &&
+      !Number.isNaN(endAt.getTime()) &&
+      now >= startAt &&
+      now <= endAt
+    );
+
+    return {
+      year,
+      enabled: !!row.enabled,
+      startAt: row.startAt || null,
+      endAt: row.endAt || null,
+      isOpen
+    };
+  });
+};
 
 const restoreDeletedStudentRecord = async ({
   existingUser,
@@ -196,14 +232,29 @@ router.post('/users', authMiddleware, adminMiddleware, async (req, res, next) =>
       return res.status(400).json({ error: 'Username (roll number) is required' });
     }
 
-    let assignedMentorId = null; // Students are created unassigned, mentors assigned via dedicated allocation page
+    let assignedMentorId = null;
+    if (req.user.role === 'admin') {
+      assignedMentorId = req.user._id;
+    }
 
     const existingActiveUser = await User.findOne({
       $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
       isDeleted: { $ne: true }
     });
     if (existingActiveUser) {
-      return res.status(400).json({ error: 'User with this email or roll number already exists' });
+      const existingMentor = existingActiveUser.assignedMentor
+        ? await User.findById(existingActiveUser.assignedMentor).select('username email').lean()
+        : null;
+
+      const assignmentText = existingMentor
+        ? `already assigned to ${existingMentor.username || existingMentor.email}`
+        : 'already exists and is currently unassigned';
+
+      return res.status(400).json({
+        error: `Student ${normalizedUsername} ${assignmentText}`,
+        code: 'STUDENT_ALREADY_EXISTS',
+        assignedMentor: existingMentor || null
+      });
     }
 
     const existingDeletedUser = await User.findOne({
@@ -319,7 +370,10 @@ router.post('/users/smart-create', authMiddleware, adminMiddleware, async (req, 
       return res.status(400).json({ error: 'Admin must be assigned to a department' });
     }
 
-    let assignedMentorId = null; // Students are created unassigned, mentors assigned via dedicated allocation page
+    let assignedMentorId = null;
+    if (req.user.role === 'admin') {
+      assignedMentorId = req.user._id;
+    }
 
     const domain = (emailDomain && String(emailDomain).trim()) || 'gvpce.ac.in';
     const created = [];
@@ -334,7 +388,14 @@ router.post('/users/smart-create', authMiddleware, adminMiddleware, async (req, 
         isDeleted: { $ne: true }
       });
       if (exists) {
-        skipped.push({ username, email, reason: 'Already exists' });
+        let reason = 'Already exists';
+        if (exists.assignedMentor) {
+          const mentor = await User.findById(exists.assignedMentor).select('username email').lean();
+          reason = mentor
+            ? `Already assigned to ${mentor.username || mentor.email}`
+            : 'Already assigned';
+        }
+        skipped.push({ username, email, reason });
         continue;
       }
 
@@ -403,6 +464,228 @@ router.get('/users/:id', authMiddleware, adminMiddleware, async (req, res, next)
     }
     res.status(200).json(user);
   } catch (err) { next(err);
+  }
+});
+
+/**
+ * @route GET /api/admin/student-profile-window
+ * @desc Get configured student profile edit window
+ * @access Admin
+ */
+router.get('/student-profile-window', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const settings = await getOrCreateGlobalSettings();
+    const window = settings.studentProfileWindow || {};
+    const now = new Date();
+    const startAt = window.startAt ? new Date(window.startAt) : null;
+    const endAt = window.endAt ? new Date(window.endAt) : null;
+    const isOpen = !!(
+      window.enabled &&
+      startAt &&
+      endAt &&
+      now >= startAt &&
+      now <= endAt
+    );
+
+    res.status(200).json({
+      enabled: !!window.enabled,
+      startAt: window.startAt || null,
+      endAt: window.endAt || null,
+      isOpen
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @route PUT /api/admin/student-profile-window
+ * @desc Configure student profile edit window
+ * @access Admin
+ */
+router.put('/student-profile-window', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const { enabled, startAt, endAt } = req.body;
+
+    const parsedEnabled = Boolean(enabled);
+    const parsedStartAt = startAt ? new Date(startAt) : null;
+    const parsedEndAt = endAt ? new Date(endAt) : null;
+
+    if (parsedEnabled) {
+      if (!parsedStartAt || !parsedEndAt || Number.isNaN(parsedStartAt.getTime()) || Number.isNaN(parsedEndAt.getTime())) {
+        return res.status(400).json({ error: 'Valid startAt and endAt are required when enabling the profile window' });
+      }
+      if (parsedStartAt >= parsedEndAt) {
+        return res.status(400).json({ error: 'startAt must be before endAt' });
+      }
+    }
+
+    const settings = await getOrCreateGlobalSettings();
+    settings.studentProfileWindow = {
+      enabled: parsedEnabled,
+      startAt: parsedEnabled ? parsedStartAt : null,
+      endAt: parsedEnabled ? parsedEndAt : null,
+      updatedBy: req.user._id
+    };
+    await settings.save();
+
+    res.status(200).json({
+      message: parsedEnabled ? 'Student profile window enabled' : 'Student profile window disabled',
+      window: settings.studentProfileWindow
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @route GET /api/admin/student-login-windows
+ * @desc Get year-wise student login windows for admin's assigned students
+ * @access Admin
+ */
+router.get('/student-login-windows', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admin can manage year-wise login windows' });
+    }
+
+    const settings = await getOrCreateGlobalSettings();
+    const windows = settings.studentLoginWindowsByYear || {};
+    const rows = toYearWindowResponse(windows);
+
+    const assignedStudents = await User.find({
+      role: 'user',
+      isDeleted: { $ne: true },
+      assignedMentor: req.user._id
+    }).select('yearOfStudy').lean();
+
+    const countsByYear = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    assignedStudents.forEach((student) => {
+      const year = Number(student.yearOfStudy);
+      if (year >= 1 && year <= 4) countsByYear[year] += 1;
+    });
+
+    res.status(200).json({
+      windows: rows,
+      assignedStudentCountsByYear: countsByYear
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @route PUT /api/admin/student-login-windows
+ * @desc Configure year-wise student login windows and optionally notify students
+ * @access Admin
+ */
+router.put('/student-login-windows', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admin can manage year-wise login windows' });
+    }
+
+    const incomingWindows = Array.isArray(req.body.windows) ? req.body.windows : [];
+    const notifyStudents = Boolean(req.body.notifyStudents);
+
+    const mapped = {
+      year1: { enabled: false, startAt: null, endAt: null },
+      year2: { enabled: false, startAt: null, endAt: null },
+      year3: { enabled: false, startAt: null, endAt: null },
+      year4: { enabled: false, startAt: null, endAt: null }
+    };
+
+    for (const row of incomingWindows) {
+      const year = Number(row?.year);
+      if (!Number.isInteger(year) || year < 1 || year > 4) {
+        return res.status(400).json({ error: 'Each window must target year 1..4' });
+      }
+      const key = `year${year}`;
+      const enabled = Boolean(row?.enabled);
+      const startAt = row?.startAt ? new Date(row.startAt) : null;
+      const endAt = row?.endAt ? new Date(row.endAt) : null;
+
+      if (enabled) {
+        if (!startAt || !endAt || Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+          return res.status(400).json({ error: `Valid startAt and endAt are required for Year ${year} when enabled` });
+        }
+        if (startAt >= endAt) {
+          return res.status(400).json({ error: `startAt must be before endAt for Year ${year}` });
+        }
+      }
+
+      mapped[key] = {
+        enabled,
+        startAt: enabled ? startAt : null,
+        endAt: enabled ? endAt : null
+      };
+    }
+
+    const settings = await getOrCreateGlobalSettings();
+    settings.studentLoginWindowsByYear = {
+      ...mapped,
+      updatedBy: req.user._id,
+      updatedAt: new Date()
+    };
+    await settings.save();
+
+    let notifiedCount = 0;
+    if (notifyStudents) {
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        return res.status(500).json({ error: 'Email configuration missing on server' });
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD
+        }
+      });
+
+      const students = await User.find({
+        role: 'user',
+        isDeleted: { $ne: true },
+        assignedMentor: req.user._id
+      }).select('email username yearOfStudy').lean();
+
+      const loginUrl = process.env.FRONTEND_URL || 'http://localhost:3000/signup';
+
+      for (const student of students) {
+        const year = Number(student.yearOfStudy);
+        if (!Number.isInteger(year) || year < 1 || year > 4) continue;
+
+        const slot = mapped[`year${year}`];
+        if (!slot?.enabled || !slot.startAt || !slot.endAt) continue;
+
+        const mailOptions = {
+          to: student.email,
+          from: process.env.EMAIL_USER,
+          subject: `Year ${year} Student Login Window Updated`,
+          html: `
+            <h3>Hello ${String(student.username || '').toUpperCase()},</h3>
+            <p>Your login window for Year ${year} has been configured by your admin.</p>
+            <p><strong>Start:</strong> ${new Date(slot.startAt).toISOString()}</p>
+            <p><strong>End:</strong> ${new Date(slot.endAt).toISOString()}</p>
+            <p>You can log in only within this window.</p>
+            <p><a href="${loginUrl}">Open Counseling Dashboard</a></p>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        notifiedCount += 1;
+      }
+    }
+
+    res.status(200).json({
+      message: notifyStudents
+        ? `Year-wise login windows saved and ${notifiedCount} student email notifications sent`
+        : 'Year-wise login windows saved successfully',
+      windows: toYearWindowResponse(settings.studentLoginWindowsByYear || {}),
+      notifiedCount
+    });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -561,6 +844,46 @@ router.get('/marks', authMiddleware, adminMiddleware, async (req, res, next) => 
     }
     res.status(200).json(marks);
   } catch (err) { next(err);
+  }
+});
+
+/**
+ * @route GET /api/admin/all-batches-students
+ * @desc Unified student list with profiles for all-batches page
+ * @access Admin+ (admin, superadmin, principal, master)
+ */
+router.get('/all-batches-students', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const query = {
+      role: 'user',
+      isDeleted: { $ne: true }
+    };
+
+    if (req.user.role === 'admin') {
+      query.assignedMentor = req.user._id;
+    } else if (req.user.role === 'superadmin') {
+      query.departmentId = req.user.departmentId;
+    }
+
+    const students = await User.find(query)
+      .select('_id username email assignedMentor yearOfStudy departmentId')
+      .lean();
+
+    const studentIds = students.map((student) => student._id);
+    const profiles = await Profile.find({ userId: { $in: studentIds } }).lean();
+    const profileMap = {};
+    profiles.forEach((profile) => {
+      profileMap[String(profile.userId)] = profile;
+    });
+
+    const result = students.map((student) => ({
+      ...student,
+      profile: profileMap[String(student._id)] || null
+    }));
+
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
   }
 });
 

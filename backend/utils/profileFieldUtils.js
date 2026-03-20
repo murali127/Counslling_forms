@@ -50,6 +50,13 @@ function calculateProfileCompletion(profile, enabledFields) {
     return 0;
   }
 
+  const isFilled = (value) => {
+    if (value === undefined || value === null) return false;
+    if (typeof value === 'boolean') return value;
+    if (Array.isArray(value)) return value.length > 0;
+    return String(value).trim() !== '';
+  };
+
   const fieldMappings = {
     'name': () => profile.name,
     'regdNo': () => profile.regdNo,
@@ -70,27 +77,30 @@ function calculateProfileCompletion(profile, enabledFields) {
     'localGuardianName': () => profile.localGuardian?.name,
     'localGuardianAddress': () => profile.localGuardian?.address,
     'localGuardianContactNumber': () => profile.localGuardian?.contactNumber,
-    'hobbies': () => profile.hobbies && profile.hobbies.length > 0,
-    'participation': () => profile.participation && (
-      (profile.participation.gamesAndActivities && profile.participation.gamesAndActivities.length > 0) ||
-      (profile.participation.literary && profile.participation.literary.length > 0) ||
-      (profile.participation.technical && profile.participation.technical.length > 0)
-    ),
+    'hobbies': () => profile.hobbies,
+    'participation': () => profile.participation && [
+      ...(profile.participation.gamesAndActivities || []),
+      ...(profile.participation.literary || []),
+      ...(profile.participation.technical || [])
+    ],
     'profilePicture': () => profile.profilePicture
   };
 
+  const supportedEnabledFields = enabledFields.filter((field) => !!fieldMappings[field]);
+  if (supportedEnabledFields.length === 0) {
+    return 0;
+  }
+
   let completed = 0;
-  for (const field of enabledFields) {
+  for (const field of supportedEnabledFields) {
     const getValue = fieldMappings[field];
-    if (getValue) {
-      const value = getValue();
-      if (value !== undefined && value !== null && String(value).trim() !== '') {
-        completed++;
-      }
+    const value = getValue();
+    if (isFilled(value)) {
+      completed++;
     }
   }
 
-  return Math.round((completed / enabledFields.length) * 100);
+  return Math.round((completed / supportedEnabledFields.length) * 100);
 }
 
 /**

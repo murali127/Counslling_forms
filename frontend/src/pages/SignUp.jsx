@@ -110,15 +110,18 @@ const Auth = () => {
       localStorage.setItem('userEmail', data.email);
       localStorage.setItem('userName', data.username);
 
-      if (data.role === 'superadmin') {
-        navigate('/superadmin/dashboard');
-      } else if (data.role === 'admin') {
-          navigate('/admin');
-        } else if (data.role === 'master') {
-        navigate('/master/dashboard');
-      } else {
-        navigate('/dashboard'); 
-      }
+      // Redirect to role-specific panel
+      const rolePanelMap = {
+        user: '/user-panel',
+        mentor: '/user-panel',
+        admin: '/admin-panel',
+        superadmin: '/superadmin-panel',
+        principal: '/principal-panel',
+        master: '/master-panel'
+      };
+
+      const redirectPath = rolePanelMap[data.role] || '/dashboard';
+      navigate(redirectPath);
     } catch (err) {
       const message = err.response?.data?.error || 'Server error, please try again later';
       setError(message);

@@ -6,7 +6,6 @@ import gvplog from '../images/gvplogo.jpg';
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isLandingPage = location.pathname === '/landingpage';
   const issignupPage = location.pathname === '/signup';
   const isAuthenticated = localStorage.getItem('authToken');
   const [user, setUser] = useState({ name: '', email: '', profilePicture: '', profileCompletion: 0 });
@@ -97,7 +96,8 @@ const Header = () => {
         setUser({
           name: response.data.username || 'User',
           email: response.data.email || 'Not Available',
-          profilePicture: response.data.profilePicture || '', profileCompletion: response.data.profileCompletion || 0,
+          profilePicture: response.data.profilePicture || '',
+          profileCompletion: response.data.role === 'master' ? 100 : (response.data.profileCompletion || 0),
         });
       } catch (error) {
         console.error('Error fetching user details:', error);
@@ -184,8 +184,10 @@ const Header = () => {
   const handleLogoClick = () => {
     if (isAuthenticated) {
       const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
-      if (userRole === 'superadmin') navigate('/superadmin/dashboard');
-      else if (userRole === 'admin') navigate('/admin');
+      if (userRole === 'superadmin') navigate('/superadmin-panel');
+      else if (userRole === 'principal') navigate('/principal/dashboard');
+      else if (userRole === 'master') navigate('/master/dashboard');
+      else if (userRole === 'admin') navigate('/admin-panel');
       else navigate('/dashboard');
     } else {
       navigate('/landingpage');

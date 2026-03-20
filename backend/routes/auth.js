@@ -8,6 +8,51 @@ const { authMiddleware } = require('../middlewares/authMiddleware');
 const { getEnabledProfileFields, calculateProfileCompletion } = require('../utils/profileFieldUtils');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const SystemSettings = require('../models/SystemSettings');
+
+const calculatePrincipalProfileCompletion = (profile, user) => {
+  if (!profile) return 0;
+
+  const checks = [
+    profile?.name,
+    profile?.email || user?.email,
+    profile?.mobileNumber,
+    profile?.dob
+  ];
+
+  const completed = checks.filter((value) => value !== undefined && value !== null && String(value).trim() !== '').length;
+  return Math.round((completed / checks.length) * 100);
+};
+
+const calculateSuperAdminProfileCompletion = (profile) => {
+  if (!profile) return 0;
+
+  const checks = [
+    profile?.name,
+    profile?.mobileNumber,
+    profile?.dob,
+    profile?.department,
+    profile?.profilePicture
+  ];
+
+  const completed = checks.filter((value) => value !== undefined && value !== null && String(value).trim() !== '').length;
+  return Math.round((completed / checks.length) * 100);
+};
+
+const calculateAdminProfileCompletion = (profile) => {
+  if (!profile) return 0;
+
+  const checks = [
+    profile?.name,
+    profile?.mobileNumber,
+    profile?.dob,
+    profile?.department,
+    profile?.profilePicture
+  ];
+
+  const completed = checks.filter((value) => value !== undefined && value !== null && String(value).trim() !== '').length;
+  return Math.round((completed / checks.length) * 100);
+};
 
 // Define allowed student email pattern
 const studentEmailRegex = /^\d+@gvpce\.ac\.in$/i;
@@ -67,6 +112,45 @@ router.post('/signin', async (req, res, next) => {
     const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
+      if (user.role === 'user') {
+        const settings = await SystemSettings.findOne({ key: 'global' }).lean();
+        const windows = settings?.studentLoginWindowsByYear || {};
+        const currentYear = Number(user.yearOfStudy);
+
+        if (!Number.isInteger(currentYear) || currentYear < 1 || currentYear > 4) {
+          return res.status(403).json({
+            error: 'Your year of study is not configured. Contact admin to enable your login window.'
+          });
+        }
+
+        const yearKey = `year${currentYear}`;
+        const yearWindow = windows?.[yearKey];
+
+        if (!yearWindow?.enabled || !yearWindow?.startAt || !yearWindow?.endAt) {
+          return res.status(403).json({
+            error: `Login window is not configured for Year ${currentYear}. Contact admin.`
+          });
+        }
+
+        const startAt = new Date(yearWindow.startAt);
+        const endAt = new Date(yearWindow.endAt);
+        const now = new Date();
+
+        if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime()) || startAt >= endAt) {
+          return res.status(403).json({
+            error: `Login window configuration is invalid for Year ${currentYear}. Contact admin.`
+          });
+        }
+
+        const isOpen = now >= startAt && now <= endAt;
+
+        if (!isOpen) {
+          return res.status(403).json({
+            error: `Login is currently closed for Year ${currentYear}. Allowed window: ${startAt.toISOString()} to ${endAt.toISOString()}`
+          });
+        }
+      }
+
       if (!user.hasLoggedIn) {
         user.hasLoggedIn = true;
         await user.save();
@@ -104,8 +188,16 @@ router.get('/user', authMiddleware, async (req, res, next) => {
     const profile = await Profile.findOne({ userId: req.user.id });
 
     let profileCompletion = 0;
-    if (profile) {
-      // Get enabled profile fields
+    if (user.role === 'master') {
+      profileCompletion = 100;
+    } else if (user.role === 'principal') {
+      profileCompletion = calculatePrincipalProfileCompletion(profile, user);
+    } else if (user.role === 'admin') {
+      profileCompletion = calculateAdminProfileCompletion(profile);
+    } else if (user.role === 'superadmin') {
+      profileCompletion = calculateSuperAdminProfileCompletion(profile);
+    } else if (profile) {
+      // For all other roles, use enabled profile field configuration.
       const enabledFields = await getEnabledProfileFields(user.departmentId);
       profileCompletion = calculateProfileCompletion(profile, enabledFields);
     }

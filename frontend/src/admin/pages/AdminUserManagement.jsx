@@ -12,7 +12,7 @@ const AdminUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [users, setUsers] = useState([]);
-  const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [canRecalculate, setCanRecalculate] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -63,8 +63,8 @@ const AdminUserManagement = () => {
         // Check if user is admin
         const userResponse = await apiClient.get('/api/auth/user', config);
         const role = userResponse.data.role;
-        setIsSuperadmin(role === 'superadmin');
-        if (userResponse.data.role !== 'admin' && userResponse.data.role !== 'superadmin') {
+        setCanRecalculate(['superadmin', 'principal', 'master'].includes(role));
+        if (!['admin', 'superadmin', 'principal', 'master'].includes(userResponse.data.role)) {
           setError('You do not have admin privileges');
           navigate('/dashboard');
           return;
@@ -293,7 +293,7 @@ const AdminUserManagement = () => {
       </Alert>
 
       <Box sx={{ marginBottom: '20px' }}>
-        <Button variant="contained" onClick={() => navigate('/admin')} sx={{ marginRight: '10px' }}>
+        <Button variant="contained" onClick={() => navigate('/admin-panel')} sx={{ marginRight: '10px' }}>
           Back to Admin Dashboard
         </Button>
         <Button variant="outlined" onClick={() => navigate('/admin/data')} sx={{ marginRight: '10px' }}>
@@ -311,7 +311,7 @@ const AdminUserManagement = () => {
         >
           Delete Selected ({selectedUserIds.length})
         </Button>
-        {isSuperadmin && (
+        {canRecalculate && (
           <Button
             variant="contained"
             color="warning"

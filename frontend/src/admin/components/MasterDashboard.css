@@ -250,6 +250,112 @@
   color: #dc3545;
 }
 
+.error-text {
+  color: #b00020;
+  margin: 0;
+}
+
+.success-text {
+  color: #2e7d32;
+  margin: 0;
+}
+
+.profile-minimal-card {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f9fbff;
+}
+
+.profile-minimal-card p {
+  margin: 4px 0;
+}
+
+.section-note {
+  color: #556;
+  font-size: 14px;
+  margin-top: 0;
+}
+
+.inline-form-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 12px;
+}
+
+.inline-form-grid input,
+.inline-form-grid select,
+.create-grid input,
+.create-grid select {
+  width: 100%;
+  border: 1px solid #c8d2dd;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.create-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 12px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.simple-table th,
+.simple-table td {
+  border: 1px solid #e3e8ef;
+  padding: 8px;
+  text-align: left;
+}
+
+.simple-table th {
+  background: #f3f6fb;
+}
+
+.simple-table td button {
+  margin-right: 6px;
+}
+
+.notify-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.slim-table-wrap {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.slim-table {
+  min-width: 0;
+}
+
+.batch-card {
+  border: 1px solid #dbe1ea;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: #fff;
+}
+
+.panel-preview-grid {
+  max-width: 520px;
+}
+
 @media (max-width: 768px) {
   .master-dashboard {
     padding: 10px;

@@ -8,7 +8,7 @@ const AdminDataOverview = () => {
   const [error, setError] = useState('');
   const [profiles, setProfiles] = useState([]);
   const [mentorGradings, setMentorGradings] = useState([]);
-  const [activeYear, setActiveYear] = useState('325'); 
+  const [activeYear, setActiveYear] = useState('all');
   const [rollSearch, setRollSearch] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -76,8 +76,25 @@ const AdminDataOverview = () => {
     fetchData();
   }, [navigate]);
 
+  const availablePrefixes = Array.from(
+    new Set(
+      profiles
+        .map((p) => String(p.regdNo || p.email || '').slice(0, 3))
+        .filter((prefix) => /^\d{3}$/.test(prefix))
+    )
+  ).sort((a, b) => Number(b) - Number(a));
+
+  const getComputedYear = (profile) => {
+    const prefix = String(profile.regdNo || profile.email || '').slice(0, 3);
+    if (!/^\d{3}$/.test(prefix)) return null;
+    const rank = availablePrefixes.indexOf(prefix) + 1;
+    if (rank < 1 || rank > 4) return null;
+    return rank;
+  };
+
   const filteredProfiles = profiles.filter((p) => {
-    const byYear = p.regdNo?.startsWith(activeYear) || p.email?.startsWith(activeYear);
+    const computedYear = getComputedYear(p);
+    const byYear = activeYear === 'all' || String(computedYear || '') === activeYear;
     const q = rollSearch.trim().toLowerCase();
     const bySearch = !q || p.regdNo?.toLowerCase().includes(q);
     return byYear && bySearch;
@@ -96,16 +113,18 @@ const AdminDataOverview = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Box sx={{ mb: 2, display: 'flex', gap: '10px', justifyContent: 'center' }}>
-        <Button variant="contained" onClick={() => navigate('/admin')}>Back to Dashboard</Button>
+        <Button variant="contained" onClick={() => navigate('/admin-panel')}>Back to Dashboard</Button>
         <Button variant="outlined" onClick={() => navigate('/admin/users')}>Manage Users</Button>
       </Box>
 
       <Box sx={{ mb: 2, display: 'flex', gap: '10px', justifyContent: 'center' }}>                                                                       
-        {['325', '324', '323', '322'].map(yr => (
-           <Button key={yr} variant={activeYear === yr ? 'contained' : 'outlined'} onClick={() => setActiveYear(yr)}>
-             {yr === '325' ? '1st Year' : yr === '324' ? '2nd Year' : yr === '323' ? '3rd Year' : '4th Year'}
-           </Button>
-        ))}
+        <Button variant={activeYear === 'all' ? 'contained' : 'outlined'} onClick={() => setActiveYear('all')}>
+          All Batches
+        </Button>
+        <Button variant={activeYear === '1' ? 'contained' : 'outlined'} onClick={() => setActiveYear('1')}>1st Year</Button>
+        <Button variant={activeYear === '2' ? 'contained' : 'outlined'} onClick={() => setActiveYear('2')}>2nd Year</Button>
+        <Button variant={activeYear === '3' ? 'contained' : 'outlined'} onClick={() => setActiveYear('3')}>3rd Year</Button>
+        <Button variant={activeYear === '4' ? 'contained' : 'outlined'} onClick={() => setActiveYear('4')}>4th Year</Button>
       </Box>
 
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
@@ -145,7 +164,16 @@ const AdminDataOverview = () => {
                     {overallGrades.length > 0 ? overallGrades.filter(Boolean).join(', ') : 'Pending'}
                   </TableCell>
                   <TableCell>
-                    <Button variant="contained" color="secondary" size="small" onClick={() => navigate(`/admin/consolidated-form/${profile.regdNo}`)}>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      disabled={!profile.regdNo}
+                      onClick={() => {
+                        if (!profile.regdNo) return;
+                        navigate(`/admin/consolidated-form/${profile.regdNo}`);
+                      }}
+                    >
                       Print Form
                     </Button>
                   </TableCell>
@@ -156,6 +184,9 @@ const AdminDataOverview = () => {
                         </Button>
                         <Button variant="outlined" color="warning" size="small" onClick={() => navigate(`/semester/${profile.regdNo}@gvpce.ac.in`)}>
                         Edit Marks
+                      </Button>
+                      <Button variant="outlined" color="success" size="small" onClick={() => navigate(`/attendance/${profile.regdNo}@gvpce.ac.in`)}>
+                        Attendance
                       </Button>
                     </Box>
                   </TableCell>

@@ -24,6 +24,8 @@ const errorResponse = (res, status, message) => {
   });
 };
 
+const ensureStudentProfileWindowOpen = async () => true;
+
 /**
  * @route GET /api/profile
  * @desc Get logged-in user's profile
@@ -79,6 +81,9 @@ router.get("/:regdNo", authMiddleware, async (req, res, next) => {
  */
 router.post("/", authMiddleware, async (req, res, next) => {
   try {
+    const canProceed = await ensureStudentProfileWindowOpen(req, res);
+    if (!canProceed) return;
+
     // Check if profile already exists
     const orConditions = [{ userId: req.user.id }];
     
@@ -183,6 +188,9 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
  */
 router.patch("/", authMiddleware, async (req, res, next) => {
   try {
+    const canProceed = await ensureStudentProfileWindowOpen(req, res);
+    if (!canProceed) return;
+
     // Check restricted fields first
     const restrictedFields = ['userId', 'regdNo', 'uniqueId', 'email'];
     for (const field of restrictedFields) {

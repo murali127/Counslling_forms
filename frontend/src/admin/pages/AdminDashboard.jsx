@@ -160,6 +160,43 @@ const AdminDashboard = () => {
           >
             Manage Students
           </Button>
+
+          <Button
+            variant="contained"
+            size="large"
+            color="secondary"
+            onClick={() => navigate('/admin/access-window')}
+            sx={{ padding: '15px' }}
+          >
+            Configure Student Login Window
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={() => navigate('/mentorgrade')}
+            sx={{ padding: '15px' }}
+          >
+            Mentor Grading
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={() => navigate('/semester')}
+            sx={{ padding: '15px' }}
+          >
+            Semester Marks
+          </Button>
+
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={() => navigate('/attendance')}
+            sx={{ padding: '15px' }}
+          >
+            Attendance
+          </Button>
           
           <Button 
             variant="contained" 

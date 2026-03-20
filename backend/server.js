@@ -16,6 +16,7 @@ const mentorGradingRouter = require('./routes/mentorGradingSchema');
 const superAdminRoutes = require("./routes/superadmin");
 const principalRoutes = require("./routes/principal");
 const masterRoutes = require("./routes/master");
+const supportChatRoutes = require('./routes/supportChat');
 
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.use('/api/mentorGrading', mentorGradingRouter);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/principal", principalRoutes);
 app.use("/api/master", masterRoutes);
+app.use('/api/support-chat', supportChatRoutes);
 
 // Centralized Error Handler Middleware
 app.use((err, req, res, next) => {

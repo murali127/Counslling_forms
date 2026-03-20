@@ -5,7 +5,7 @@ import {
   CircularProgress, Typography, Alert, Box, MenuItem, Select, Chip, Card, IconButton
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Replace these with actual imports if you have the MUI icons package
 const ArrowBackIcon = () => <span>←</span>;
@@ -38,6 +38,7 @@ const gradeColors = {
 };
 
 const MarksTable = () => {
+  const { email: emailParam } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
@@ -45,22 +46,82 @@ const MarksTable = () => {
   const [isNewEntry, setIsNewEntry] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState(1);
   const [isSaved, setIsSaved] = useState(false);
+  const [role, setRole] = useState('user');
+  const [students, setStudents] = useState([]);
+  const [selectedEmail, setSelectedEmail] = useState('');
+  const [contextReady, setContextReady] = useState(false);
   const navigate = useNavigate();
 
-  const email = localStorage.getItem("userEmail") || "";
+  const isManager = ['admin', 'superadmin', 'principal', 'master'].includes(role);
 
   useEffect(() => {
-    if (!email) {
-      setError("Email is missing. Please log in again.");
-      setLoading(false);
+    const loadContext = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        setContextReady(false);
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+          navigate('/signup');
+          return;
+        }
+
+        const userRes = await apiClient.get('/api/auth/user', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const currentRole = userRes.data?.role || 'user';
+        setRole(currentRole);
+
+        if (['admin', 'superadmin', 'principal', 'master'].includes(currentRole)) {
+          const studentsRes = await apiClient.get('/api/admin/users?role=user', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          const list = studentsRes.data || [];
+          setStudents(list);
+
+          let targetEmail = '';
+          if (emailParam) {
+            const target = list.find((student) => String(student.email).toLowerCase() === String(emailParam).toLowerCase());
+            targetEmail = target?.email || '';
+          }
+
+          if (!targetEmail && list.length > 0) {
+            targetEmail = list[0].email;
+          }
+
+          setSelectedEmail(targetEmail);
+        } else {
+          const selfEmail = localStorage.getItem('userEmail') || userRes.data?.email || '';
+          setSelectedEmail(selfEmail);
+        }
+
+        setContextReady(true);
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to load student context.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContext();
+  }, [emailParam, navigate]);
+
+  useEffect(() => {
+    if (!contextReady) return;
+    if (!selectedEmail) {
+      setError('No student selected.');
       return;
     }
 
     const fetchSemesterDetails = async () => {
       try {
         setLoading(true);
+        setError('');
         const response = await apiClient.get(
-          `/api/semester/${encodeURIComponent(email)}/${selectedSemester}`
+          `/api/semester/${encodeURIComponent(selectedEmail)}/${selectedSemester}`
         );
 
         if (response.status === 200) {
@@ -91,7 +152,7 @@ const MarksTable = () => {
     };
 
     fetchSemesterDetails();
-  }, [email, selectedSemester]);
+  }, [contextReady, selectedEmail, selectedSemester]);
 
   const handleMarksChange = (index, field, value) => {
     const updated = [...updatedMarks];
@@ -105,25 +166,49 @@ const MarksTable = () => {
   };
 
   const handleSave = async () => {
+    if (!selectedEmail) {
+      setError('No student selected.');
+      return;
+    }
+
     try {
       setLoading(true);
+      const normalizedSubjects = (subjectList[selectedSemester] || []).map((subjectName) => {
+        const current = updatedMarks.find((item) => item.subject === subjectName) || {};
+        const safeMid1 = current.mid1 === '' || current.mid1 === undefined || current.mid1 === null
+          ? 0
+          : Number(current.mid1);
+        const safeMid2 = current.mid2 === '' || current.mid2 === undefined || current.mid2 === null
+          ? 0
+          : Number(current.mid2);
+
+        return {
+          subject: subjectName,
+          mid1: Number.isFinite(safeMid1) ? Math.min(30, Math.max(0, safeMid1)) : 0,
+          mid2: Number.isFinite(safeMid2) ? Math.min(30, Math.max(0, safeMid2)) : 0,
+          ext: current.ext || 'A+'
+        };
+      });
+
       let response;
       if (isNewEntry) {
         response = await apiClient.post(
           `/api/semester`,
-          { email, semester: selectedSemester, subjects: updatedMarks }
+          { email: selectedEmail, semester: selectedSemester, subjects: normalizedSubjects }
         );
       } else {
         response = await apiClient.put(
-          `/api/semester/${encodeURIComponent(email)}/${selectedSemester}`,
-          { subjects: updatedMarks }
+          `/api/semester/${encodeURIComponent(selectedEmail)}/${selectedSemester}`,
+          { subjects: normalizedSubjects }
         );
       }
 
-      if (response.status === 200) {
+      if (response.status >= 200 && response.status < 300) {
+        setUpdatedMarks(normalizedSubjects);
         setEditMode(false);
         setIsNewEntry(false);
         setIsSaved(true);
+        setError('');
       }
     } catch (err) {
       console.error("Error updating subject marks:", err.response?.data || err);
@@ -257,7 +342,7 @@ const MarksTable = () => {
           
           <IconButton 
             onClick={handleNextSemester} 
-            disabled={!isSaved || selectedSemester ===.8}
+            disabled={!isSaved || selectedSemester === 8}
             sx={{ mx: 1 }}
           >
             <ArrowForwardIcon />
@@ -275,6 +360,30 @@ const MarksTable = () => {
         </Button>
       </Box>
 
+      {isManager && (
+        <Paper sx={{ p: 2, mb: 3, borderRadius: 3 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+            Select Student
+          </Typography>
+          <Select
+            fullWidth
+            size="small"
+            value={selectedEmail}
+            onChange={(e) => {
+              setSelectedEmail(e.target.value);
+              setEditMode(false);
+              setIsSaved(false);
+            }}
+          >
+            {students.map((student) => (
+              <MenuItem key={student._id} value={student.email}>
+                {student.username} ({student.email})
+              </MenuItem>
+            ))}
+          </Select>
+        </Paper>
+      )}
+
       <Card sx={{ mb: 4, borderRadius: 3, overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.1)' }}>
         <Box sx={{ 
           p: 3, 
@@ -285,7 +394,7 @@ const MarksTable = () => {
             Academic Record
           </Typography>
           <Typography variant="subtitle1">
-            {email}
+            {selectedEmail}
           </Typography>
         </Box>
 

@@ -47,7 +47,24 @@ const MentorGrading = () => {
   const [isSaved, setIsSaved] = useState(false); // Track if the current semester is saved
   
   const [assignedStudents, setAssignedStudents] = useState([]);
-  const [activeYear, setActiveYear] = useState('325');
+  const [activeYear, setActiveYear] = useState('all');
+
+  const availablePrefixes = Array.from(
+    new Set(
+      assignedStudents
+        .map((student) => String(student.username || '').slice(0, 3))
+        .filter((prefix) => /^\d{3}$/.test(prefix))
+    )
+  ).sort((a, b) => Number(b) - Number(a));
+
+  const getYearLabel = (prefix) => {
+    const rank = availablePrefixes.indexOf(prefix) + 1;
+    if (rank === 1) return '1st Year';
+    if (rank === 2) return '2nd Year';
+    if (rank === 3) return '3rd Year';
+    if (rank === 4) return '4th Year';
+    return `Previous Batch (${prefix})`;
+  };
   // Fetch mentor grading data for the student
   useEffect(() => {
     const fetchMentorGrading = async () => {
@@ -198,7 +215,14 @@ const MentorGrading = () => {
   // Save mentor grading data (only for mentors)
   const handleSave = async () => {
     try {
-      const response = await apiClient.post(`/api/mentorGrading/${mentorGrading.email}`, mentorGrading);
+      const targetEmail = mentorGrading.email || email;
+      if (!targetEmail) {
+        throw new Error('Student email is required');
+      }
+      const response = await apiClient.post(`/api/mentorGrading/${targetEmail}`, {
+        ...mentorGrading,
+        email: targetEmail
+      });
       if (response.status === 200 || response.status === 201) {
         setError("");
         setIsSaved(true); // Mark the current semester as saved
@@ -254,7 +278,11 @@ const MentorGrading = () => {
   }
 
   if (isMentor && !email) {
-    const filteredStudents = assignedStudents.filter(s => s.username && s.username.startsWith(activeYear));
+    const filteredStudents = assignedStudents.filter((s) => {
+      if (!s.username) return false;
+      if (activeYear === 'all') return true;
+      return s.username.startsWith(activeYear);
+    });
     return (
       <Box sx={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
         <Button variant="outlined" onClick={handleBackToDashboard} sx={{ mb: 2 }}>
@@ -263,10 +291,16 @@ const MentorGrading = () => {
         <Typography variant="h5" gutterBottom>Select Student to Grade</Typography>
         <Paper sx={{ p: 4, mt: 2 }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-            <Button variant={activeYear === '325' ? 'contained' : 'outlined'} onClick={() => setActiveYear('325')}>1st Year</Button>
-            <Button variant={activeYear === '324' ? 'contained' : 'outlined'} onClick={() => setActiveYear('324')}>2nd Year</Button>
-            <Button variant={activeYear === '323' ? 'contained' : 'outlined'} onClick={() => setActiveYear('323')}>3rd Year</Button>
-            <Button variant={activeYear === '322' ? 'contained' : 'outlined'} onClick={() => setActiveYear('322')}>4th Year</Button>
+            <Button variant={activeYear === 'all' ? 'contained' : 'outlined'} onClick={() => setActiveYear('all')}>All Batches</Button>
+            {availablePrefixes.map((prefix) => (
+              <Button
+                key={prefix}
+                variant={activeYear === prefix ? 'contained' : 'outlined'}
+                onClick={() => setActiveYear(prefix)}
+              >
+                {getYearLabel(prefix)}
+              </Button>
+            ))}
           </Box>
           <FormControl fullWidth>
             <InputLabel>Select Student</InputLabel>
@@ -466,13 +500,11 @@ const MentorGrading = () => {
         />
       </Box>
 
-      {isMentor && (
-        <Box display="flex" justifyContent="center">
-          <Button variant="contained" color="primary" onClick={handleSave}>
-            Save
-          </Button>
-        </Box>
-      )}
+      <Box display="flex" justifyContent="center">
+        <Button variant="contained" color="primary" onClick={handleSave}>
+          {isMentor ? 'Save Grading' : 'Save Details'}
+        </Button>
+      </Box>
     </Box>
   );
 };

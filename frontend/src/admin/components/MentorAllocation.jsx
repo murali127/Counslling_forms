@@ -237,8 +237,11 @@ const MentorAllocation = () => {
 
   return (
     <Box sx={{ padding: 3, maxWidth: '1400px', margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        Mentor Allocation Dashboard
+      <Typography variant="h4" gutterBottom sx={{ mb: 1, fontWeight: 'bold' }}>
+        Mentor/Admin Allocation Dashboard
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+        Allocate unassigned students to mentors either manually or randomly. Follow the steps below.
       </Typography>
       <Button
         onClick={() => navigate('/superadmin/dashboard')}
@@ -251,23 +254,46 @@ const MentorAllocation = () => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
+      {/* Progress Steps */}
+      <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f5f5f5' }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</Box>
+            <Typography variant="body2">Select Mentor</Typography>
+          </Box>
+          <Typography variant="body2">→</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</Box>
+            <Typography variant="body2">Select Year</Typography>
+          </Box>
+          <Typography variant="body2">→</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</Box>
+            <Typography variant="body2">Choose Mode & Allocate</Typography>
+          </Box>
+        </Box>
+      </Paper>
+
       <Grid container spacing={3}>
         {/* Mentor Selection and Assigned Students */}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: 'fit-content' }}>
-            <Typography variant="h6" gutterBottom>
-              1. Select Mentor
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>1</Box>
+              <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                Select Mentor/Admin
+              </Typography>
+            </Box>
             <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Mentor</InputLabel>
+              <InputLabel>Mentor/Admin</InputLabel>
               <Select
                 value={selectedMentor}
-                label="Mentor"
+                label="Mentor/Admin"
                 onChange={(e) => setSelectedMentor(e.target.value)}
               >
                 {mentors.map(mentor => (
                   <MenuItem key={mentor._id} value={mentor._id}>
-                    {mentor.username} ({mentor.assignedStudentsCount} students)
+                    {mentor.username} ({mentor.assignedStudentsCount} students assigned)
                   </MenuItem>
                 ))}
               </Select>
@@ -275,10 +301,10 @@ const MentorAllocation = () => {
 
             {selectedMentor && (
               <>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                   Assigned Students {selectedYear === 'all' ? '(All Years)' : `(Year ${selectedYear})`}
                 </Typography>
-                <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+                <Box sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #ddd', borderRadius: 1, p: 1 }}>
                   {assignedStudents.length > 0 ? (
                     assignedStudents.map(student => (
                       <Box
@@ -288,7 +314,8 @@ const MentorAllocation = () => {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           p: 1,
-                          borderBottom: '1px solid #eee'
+                          borderBottom: '1px solid #eee',
+                          '&:last-child': { borderBottom: 'none' }
                         }}
                       >
                         <Typography variant="body2">
@@ -317,9 +344,12 @@ const MentorAllocation = () => {
         {/* Allocation Modes */}
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              2. Select Year and Allocation Mode
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>2</Box>
+              <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                Select Year
+              </Typography>
+            </Box>
 
             {/* Year Selection */}
             <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
@@ -335,6 +365,14 @@ const MentorAllocation = () => {
               ))}
             </Box>
 
+            {/* Step 3 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, mt: 4 }}>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>3</Box>
+              <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                Choose Allocation Mode
+              </Typography>
+            </Box>
+
             {/* Allocation Mode Tabs */}
             <Tabs
               value={allocationMode}
@@ -347,32 +385,37 @@ const MentorAllocation = () => {
 
             {allocationMode === 'manual' ? (
               <>
+                <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  Manually select and assign students to the selected mentor/admin
+                </Typography>
                 {/* Search */}
                 <TextField
                   fullWidth
                   label="Search by roll number or email"
+                  placeholder="e.g., 113001 or student@email.com"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   sx={{ mb: 2 }}
                 />
 
                 {/* Student List */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Unassigned Students (Year {selectedYear}): {filteredStudents.length}
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Unassigned Students (Year {selectedYear === 'all' ? 'All' : selectedYear}): {filteredStudents.length}
                 </Typography>
 
                 {filteredStudents.length === 0 ? (
-                  <Alert severity="info">No unassigned students found for Year {selectedYear}</Alert>
+                  <Alert severity="info">No unassigned students found for Year {selectedYear === 'all' ? 'All' : selectedYear}</Alert>
                 ) : (
                   <>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="body2">
-                        Selected: {selectedStudents.length} students
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Selected: <strong>{selectedStudents.length}</strong> students
                       </Typography>
                       <Button
                         variant="contained"
                         onClick={handleManualAssign}
-                        disabled={selectedStudents.length === 0 || loading}
+                        disabled={selectedStudents.length === 0 || loading || !selectedMentor}
+                        color="success"
                       >
                         Allocate Selected ({selectedStudents.length})
                       </Button>
@@ -381,7 +424,7 @@ const MentorAllocation = () => {
                     <TableContainer sx={{ maxHeight: 400 }}>
                       <Table stickyHeader size="small">
                         <TableHead>
-                          <TableRow>
+                          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                             <TableCell padding="checkbox">
                               <Checkbox
                                 checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
@@ -389,14 +432,14 @@ const MentorAllocation = () => {
                                 onChange={(e) => handleSelectAll(e.target.checked)}
                               />
                             </TableCell>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Roll Number</TableCell>
-                            <TableCell>Department</TableCell>
+                            <TableCell><strong>Name</strong></TableCell>
+                            <TableCell><strong>Roll Number</strong></TableCell>
+                            <TableCell><strong>Department</strong></TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
                           {paginatedStudents.map(student => (
-                            <TableRow key={student._id}>
+                            <TableRow key={student._id} hover>
                               <TableCell padding="checkbox">
                                 <Checkbox
                                   checked={selectedStudents.includes(student._id)}
@@ -430,17 +473,21 @@ const MentorAllocation = () => {
             ) : (
               <>
                 {/* Random Allocation */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Random Allocation for Year {selectedYear}
+                <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  Randomly assign the specified number of unassigned students to the selected mentor/admin
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  Available students: {filteredStudents.length}
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  Random Allocation for Year {selectedYear === 'all' ? 'All' : selectedYear}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  Available unassigned students: <strong>{filteredStudents.length}</strong>
                 </Typography>
 
                 <TextField
                   fullWidth
                   type="number"
-                  label="Number of Students to Allocate"
+                  label="Number of Students to Allocate Randomly"
+                  placeholder="Enter number e.g., 10"
                   value={randomCount}
                   onChange={(e) => setRandomCount(e.target.value)}
                   sx={{ mb: 2 }}
@@ -449,11 +496,13 @@ const MentorAllocation = () => {
 
                 <Button
                   variant="contained"
+                  color="success"
                   onClick={handleRandomAssign}
                   disabled={!randomCount || loading || !selectedMentor}
                   fullWidth
+                  sx={{ py: 1.5 }}
                 >
-                  Random Allocate {randomCount || 0} Students
+                  Randomly Allocate {randomCount || 0} Students to {selectedMentor ? 'Selected Mentor' : 'Mentor (Select one first)'}
                 </Button>
               </>
             )}
