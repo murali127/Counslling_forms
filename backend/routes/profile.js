@@ -5,6 +5,7 @@ const Profile = require("../models/Profile");
 const { generateSimpleIdFromEmail } = require("../utils/idGenerator");
 const cloudinary = require("cloudinary").v2;
 const { authMiddleware, adminMiddleware } = require("../middlewares/authMiddleware");
+const SystemSettings = require('../models/SystemSettings');
 
 dotenv.config();
 
@@ -22,6 +23,39 @@ const errorResponse = (res, status, message) => {
     success: false,
     error: message 
   });
+};
+
+const ensureStudentProfileWindowOpen = async (req, res) => {
+  if (!req.user || req.user.role !== 'user') return true;
+
+  const settings = await SystemSettings.findOne({ key: 'global' }).lean();
+  const window = settings?.studentProfileWindow;
+
+  if (!window?.enabled) {
+    return true;
+  }
+
+  const startAt = window.startAt ? new Date(window.startAt) : null;
+  const endAt = window.endAt ? new Date(window.endAt) : null;
+  const now = new Date();
+
+  const isOpen = !!(
+    startAt &&
+    endAt &&
+    !Number.isNaN(startAt.getTime()) &&
+    !Number.isNaN(endAt.getTime()) &&
+    now >= startAt &&
+    now <= endAt
+  );
+
+  if (isOpen) return true;
+
+  const windowText = startAt && endAt
+    ? `from ${startAt.toISOString()} to ${endAt.toISOString()}`
+    : 'during the configured access window';
+
+  errorResponse(res, 403, `Profile editing is currently closed for students. Editing is allowed only ${windowText}.`);
+  return false;
 };
 
 /**
@@ -79,6 +113,9 @@ router.get("/:regdNo", authMiddleware, async (req, res, next) => {
  */
 router.post("/", authMiddleware, async (req, res, next) => {
   try {
+    const canProceed = await ensureStudentProfileWindowOpen(req, res);
+    if (!canProceed) return;
+
     // Check if profile already exists
     const orConditions = [{ userId: req.user.id }];
     
@@ -183,6 +220,9 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
  */
 router.patch("/", authMiddleware, async (req, res, next) => {
   try {
+    const canProceed = await ensureStudentProfileWindowOpen(req, res);
+    if (!canProceed) return;
+
     // Check restricted fields first
     const restrictedFields = ['userId', 'regdNo', 'uniqueId', 'email'];
     for (const field of restrictedFields) {

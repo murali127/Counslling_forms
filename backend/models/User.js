@@ -38,6 +38,11 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department'
   },
+  assignedSuperadmin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   yearOfStudy: {
     type: Number,
     min: 1,

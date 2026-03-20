@@ -8,7 +8,7 @@ const AdminDataOverview = () => {
   const [error, setError] = useState('');
   const [profiles, setProfiles] = useState([]);
   const [mentorGradings, setMentorGradings] = useState([]);
-  const [activeYear, setActiveYear] = useState('325'); 
+  const [activeYear, setActiveYear] = useState('all'); 
   const [rollSearch, setRollSearch] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -77,12 +77,29 @@ const AdminDataOverview = () => {
   }, [navigate]);
 
   const filteredProfiles = profiles.filter((p) => {
-    const byYear = p.regdNo?.startsWith(activeYear) || p.email?.startsWith(activeYear);
+    const byYear = activeYear === 'all' || p.regdNo?.startsWith(activeYear) || p.email?.startsWith(activeYear);
     const q = rollSearch.trim().toLowerCase();
     const bySearch = !q || p.regdNo?.toLowerCase().includes(q);
     return byYear && bySearch;
   });
   const paginatedProfiles = filteredProfiles.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const availablePrefixes = Array.from(
+    new Set(
+      profiles
+        .map((p) => String(p.regdNo || p.email || '').slice(0, 3))
+        .filter((prefix) => /^\d{3}$/.test(prefix))
+    )
+  ).sort((a, b) => Number(b) - Number(a));
+
+  const getYearLabel = (prefix) => {
+    const rank = availablePrefixes.indexOf(prefix) + 1;
+    if (rank === 1) return '1st Year';
+    if (rank === 2) return '2nd Year';
+    if (rank === 3) return '3rd Year';
+    if (rank === 4) return '4th Year';
+    return `Previous Batch (${prefix})`;
+  };
 
   useEffect(() => {
     setPage(0);
@@ -101,10 +118,13 @@ const AdminDataOverview = () => {
       </Box>
 
       <Box sx={{ mb: 2, display: 'flex', gap: '10px', justifyContent: 'center' }}>                                                                       
-        {['325', '324', '323', '322'].map(yr => (
-           <Button key={yr} variant={activeYear === yr ? 'contained' : 'outlined'} onClick={() => setActiveYear(yr)}>
-             {yr === '325' ? '1st Year' : yr === '324' ? '2nd Year' : yr === '323' ? '3rd Year' : '4th Year'}
-           </Button>
+        <Button variant={activeYear === 'all' ? 'contained' : 'outlined'} onClick={() => setActiveYear('all')}>
+          All Batches
+        </Button>
+        {availablePrefixes.map((yr) => (
+          <Button key={yr} variant={activeYear === yr ? 'contained' : 'outlined'} onClick={() => setActiveYear(yr)}>
+            {getYearLabel(yr)}
+          </Button>
         ))}
       </Box>
 
@@ -145,7 +165,16 @@ const AdminDataOverview = () => {
                     {overallGrades.length > 0 ? overallGrades.filter(Boolean).join(', ') : 'Pending'}
                   </TableCell>
                   <TableCell>
-                    <Button variant="contained" color="secondary" size="small" onClick={() => navigate(`/admin/consolidated-form/${profile.regdNo}`)}>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      size="small"
+                      disabled={!profile.regdNo}
+                      onClick={() => {
+                        if (!profile.regdNo) return;
+                        navigate(`/admin/consolidated-form/${profile.regdNo}`);
+                      }}
+                    >
                       Print Form
                     </Button>
                   </TableCell>
@@ -156,6 +185,9 @@ const AdminDataOverview = () => {
                         </Button>
                         <Button variant="outlined" color="warning" size="small" onClick={() => navigate(`/semester/${profile.regdNo}@gvpce.ac.in`)}>
                         Edit Marks
+                      </Button>
+                      <Button variant="outlined" color="success" size="small" onClick={() => navigate(`/attendance/${profile.regdNo}@gvpce.ac.in`)}>
+                        Attendance
                       </Button>
                     </Box>
                   </TableCell>

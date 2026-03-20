@@ -9,6 +9,20 @@ const { getEnabledProfileFields, calculateProfileCompletion } = require('../util
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
+const calculatePrincipalProfileCompletion = (profile, user) => {
+  if (!profile) return 0;
+
+  const checks = [
+    profile?.name,
+    profile?.email || user?.email,
+    profile?.mobileNumber,
+    profile?.dob
+  ];
+
+  const completed = checks.filter((value) => value !== undefined && value !== null && String(value).trim() !== '').length;
+  return Math.round((completed / checks.length) * 100);
+};
+
 // Define allowed student email pattern
 const studentEmailRegex = /^\d+@gvpce\.ac\.in$/i;
 
@@ -104,8 +118,12 @@ router.get('/user', authMiddleware, async (req, res, next) => {
     const profile = await Profile.findOne({ userId: req.user.id });
 
     let profileCompletion = 0;
-    if (profile) {
-      // Get enabled profile fields
+    if (user.role === 'master') {
+      profileCompletion = 100;
+    } else if (user.role === 'principal') {
+      profileCompletion = calculatePrincipalProfileCompletion(profile, user);
+    } else if (profile) {
+      // For all other roles, use enabled profile field configuration.
       const enabledFields = await getEnabledProfileFields(user.departmentId);
       profileCompletion = calculateProfileCompletion(profile, enabledFields);
     }

@@ -13,16 +13,54 @@ const ConsolidatedCounselingForm = () => {
   const [marks, setMarks] = useState(null);
   const [mentorGrading, setMentorGrading] = useState(null);
   const [error, setError] = useState('');
+  const [viewerRole, setViewerRole] = useState('user');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        if (!token) return navigate('/login');
+        if (!token) return navigate('/signup');
         
         const config = { headers: { Authorization: `Bearer ${token}` } };
+        const userRes = await apiClient.get('/api/auth/user', config);
+        const role = userRes.data?.role || 'user';
+        setViewerRole(role);
+        let targetRegdNo = regdNo;
+
+        if (role === 'user' || role === 'mentor') {
+          const selfProfileRes = await apiClient.get('/api/profile', config);
+          const selfRegdNo = selfProfileRes.data?.profile?.regdNo;
+
+          if (!selfRegdNo) {
+            setError('Your profile is incomplete. Please complete your profile first.');
+            return;
+          }
+
+          if (regdNo && String(regdNo) !== String(selfRegdNo)) {
+            setError('You can download only your own counseling form.');
+            return;
+          }
+
+          targetRegdNo = selfRegdNo;
+        } else {
+          if (!regdNo) {
+            setError('Student registration number is missing.');
+            return;
+          }
+
+          const allowedRes = await apiClient.get('/api/admin/users?role=user', config);
+          const allowedRegdNos = new Set((allowedRes.data || []).map((u) => String(u.username)));
+          if (!allowedRegdNos.has(String(regdNo))) {
+            if (role === 'admin') {
+              setError('You can download counseling forms only for students assigned to you.');
+            } else {
+              setError('You are not authorized to access this counseling form.');
+            }
+            return;
+          }
+        }
         
-        const profileRes = await apiClient.get(`/api/profile/${regdNo}`, config);
+        const profileRes = await apiClient.get(`/api/profile/${targetRegdNo}`, config);
         const profileData = profileRes.data.profile;
         setProfile(profileData);
         
@@ -52,7 +90,12 @@ const ConsolidatedCounselingForm = () => {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}><CircularProgress /></Box>;
   if (error || !profile) return <Box sx={{ p: 4 }}><Typography color="error">{error || 'Profile not found'}</Typography></Box>;
 
-  const handlePrint = () => window.print();
+  const canPrint = viewerRole === 'user';
+
+  const handlePrint = () => {
+    if (!canPrint) return;
+    window.print();
+  };
 
   const renderSemesterRows = (startSem, endSem) => {
     if (!marks || !marks.semesters) return null;
@@ -131,7 +174,13 @@ const ConsolidatedCounselingForm = () => {
 
       <Box className="no-print" sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Button variant="outlined" onClick={() => navigate(-1)}>Back</Button>
-        <Button variant="contained" color="primary" onClick={handlePrint}>Print Form</Button>
+        {canPrint ? (
+          <Button variant="contained" color="primary" onClick={handlePrint}>Print Form</Button>
+        ) : (
+          <Typography variant="body2" sx={{ color: 'text.secondary', alignSelf: 'center' }}>
+            Print is available only for student users.
+          </Typography>
+        )}
       </Box>
 
       <div id="printable-form" style={{fontFamily: 'Arial, sans-serif', color: '#000', backgroundColor: '#fff', padding: '10px'}}>

@@ -10,6 +10,7 @@ const { getEnabledProfileFields, calculateProfileCompletion } = require('../util
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const SystemSettings = require('../models/SystemSettings');
 
 const ROLL_NUMBER_REGEX = /^\d{12}$/;
 
@@ -25,6 +26,14 @@ const normalizeYearOfStudy = (value) => {
 };
 
 const getAdmissionPrefix = (rollNumber) => normalizeRollNumber(rollNumber).slice(0, 3);
+
+const getOrCreateGlobalSettings = async () => {
+  let settings = await SystemSettings.findOne({ key: 'global' });
+  if (!settings) {
+    settings = await SystemSettings.create({ key: 'global' });
+  }
+  return settings;
+};
 
 const restoreDeletedStudentRecord = async ({
   existingUser,
@@ -403,6 +412,77 @@ router.get('/users/:id', authMiddleware, adminMiddleware, async (req, res, next)
     }
     res.status(200).json(user);
   } catch (err) { next(err);
+  }
+});
+
+/**
+ * @route GET /api/admin/student-profile-window
+ * @desc Get configured student profile edit window
+ * @access Admin
+ */
+router.get('/student-profile-window', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const settings = await getOrCreateGlobalSettings();
+    const window = settings.studentProfileWindow || {};
+    const now = new Date();
+    const startAt = window.startAt ? new Date(window.startAt) : null;
+    const endAt = window.endAt ? new Date(window.endAt) : null;
+    const isOpen = !!(
+      window.enabled &&
+      startAt &&
+      endAt &&
+      now >= startAt &&
+      now <= endAt
+    );
+
+    res.status(200).json({
+      enabled: !!window.enabled,
+      startAt: window.startAt || null,
+      endAt: window.endAt || null,
+      isOpen
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @route PUT /api/admin/student-profile-window
+ * @desc Configure student profile edit window
+ * @access Admin
+ */
+router.put('/student-profile-window', authMiddleware, adminMiddleware, async (req, res, next) => {
+  try {
+    const { enabled, startAt, endAt } = req.body;
+
+    const parsedEnabled = Boolean(enabled);
+    const parsedStartAt = startAt ? new Date(startAt) : null;
+    const parsedEndAt = endAt ? new Date(endAt) : null;
+
+    if (parsedEnabled) {
+      if (!parsedStartAt || !parsedEndAt || Number.isNaN(parsedStartAt.getTime()) || Number.isNaN(parsedEndAt.getTime())) {
+        return res.status(400).json({ error: 'Valid startAt and endAt are required when enabling the profile window' });
+      }
+      if (parsedStartAt >= parsedEndAt) {
+        return res.status(400).json({ error: 'startAt must be before endAt' });
+      }
+    }
+
+    const settings = await getOrCreateGlobalSettings();
+    settings.studentProfileWindow = {
+      enabled: parsedEnabled,
+      startAt: parsedEnabled ? parsedStartAt : null,
+      endAt: parsedEnabled ? parsedEndAt : null,
+      updatedBy: req.user._id
+    };
+    await settings.save();
+
+    res.status(200).json({
+      message: parsedEnabled ? 'Student profile window enabled' : 'Student profile window disabled',
+      window: settings.studentProfileWindow
+    });
+  } catch (err) {
+    next(err);
   }
 });
 

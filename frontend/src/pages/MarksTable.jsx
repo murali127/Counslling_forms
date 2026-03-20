@@ -257,7 +257,7 @@ const MarksTable = () => {
           
           <IconButton 
             onClick={handleNextSemester} 
-            disabled={!isSaved || selectedSemester ===.8}
+            disabled={!isSaved || selectedSemester === 8}
             sx={{ mx: 1 }}
           >
             <ArrowForwardIcon />

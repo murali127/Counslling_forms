@@ -947,4 +947,36 @@ router.post("/unassign-students", authMiddleware, superAdminMiddleware, async (r
   }
 });
 
+// ============== RECALCULATE STUDENT YEARS ENDPOINT ==============
+
+router.post('/students/recalculate-years', authMiddleware, superAdminMiddleware, async (req, res, next) => {
+  try {
+    const summary = await recalculateStudentYears();
+
+    const activeStudents = await User.find({
+      role: 'user',
+      isDeleted: { $ne: true }
+    })
+      .select('username email yearOfStudy')
+      .lean();
+
+    const yearWiseCounts = activeStudents.reduce((acc, student) => {
+      const yearKey = String(student.yearOfStudy || 'unknown');
+      acc[yearKey] = (acc[yearKey] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.status(200).json({
+      message: 'Year recalculation completed successfully',
+      updatedCount: summary.updatedCount,
+      activePrefixes: summary.activePrefixes,
+      firstYearPrefix: summary.firstYearPrefix,
+      manualLockedCount: summary.manualLockedCount,
+      yearWiseCounts
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

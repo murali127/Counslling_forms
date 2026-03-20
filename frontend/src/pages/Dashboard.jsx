@@ -119,6 +119,9 @@ const Dashboard = () => {
         <div style={styles.buttonGroup}>
           <button onClick={handleLogout} style={styles.button}>Log Out</button>
           <button onClick={() => navigate('/profile')} style={styles.buttonSecondary}>My Profile</button>
+          <button onClick={() => navigate('/attendance')} style={styles.buttonTertiary}>Attendance</button>
+          <button onClick={() => navigate('/semester')} style={styles.buttonTertiary}>Semester Marks</button>
+          <button onClick={() => navigate('/mentorgrade')} style={styles.buttonTertiary}>Mentor Grading</button>
           
           {user.role === 'admin' && (
             <button onClick={() => navigate('/admin')} style={{
@@ -240,6 +243,7 @@ const styles = {
   },
   buttonGroup: {
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '20px',
   },
   button: {

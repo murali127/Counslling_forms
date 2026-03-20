@@ -58,12 +58,35 @@ const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("authToken");
+      let accountSeed = null;
       if (!token) {
         navigate("/signup");
         return;
       }
 
       try {
+        const userResponse = await apiClient.get("/api/auth/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("User role:", userResponse.data.role);
+        setUserRole(userResponse.data.role || "");
+
+        accountSeed = {
+          name: userResponse.data.username || '',
+          email: userResponse.data.email || ''
+        };
+
+        if (userResponse.data.role === 'master') {
+          setProfile(accountSeed);
+          setFormData((prev) => ({
+            ...prev,
+            ...accountSeed
+          }));
+          setIsNewUser(false);
+          setIsLoading(false);
+          return;
+        }
+
         const response = await apiClient.get("/api/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -82,24 +105,37 @@ const [isLoading, setIsLoading] = useState(true);
           setIsNewUser(true);
         }
         
-        // Always fetch user role regardless of whether profile exists
-        const userResponse = await apiClient.get("/api/auth/user", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("User role:", userResponse.data.role);
-        setUserRole(userResponse.data.role || "");
-        
         // If new user, also set email
         if (!response.data.success || !response.data.profile) {
+          const derivedRegdNo = String(userResponse.data.email || '').split('@')[0] || '';
           setFormData(prev => ({
             ...prev,
-            email: userResponse.data.email || ""
+            name: prev.name || accountSeed.name,
+            email: userResponse.data.email || "",
+            regdNo: prev.regdNo || derivedRegdNo
           }));
+          if (userResponse.data.role === 'principal') {
+            setProfile((prev) => ({
+              ...(prev || {}),
+              ...accountSeed
+            }));
+          }
         }
       } catch (error) {
         if (error.response?.status === 404) {
           console.log("Profile not found (404)");
           setIsNewUser(true);
+          if (accountSeed) {
+            setProfile((prev) => ({
+              ...(prev || {}),
+              ...accountSeed
+            }));
+            setFormData((prev) => ({
+              ...prev,
+              ...accountSeed,
+              regdNo: prev.regdNo || String(accountSeed.email || '').split('@')[0]
+            }));
+          }
         } else {
           setError("Error fetching profile. Please try again.");
           console.error("Profile fetch error:", error);
@@ -146,6 +182,11 @@ const [isLoading, setIsLoading] = useState(true);
     if (alwaysEditableFields.includes(fieldName)) {
       return false;
     }
+
+    // New students must be able to set/adjust regdNo on first profile creation
+    if (fieldName === 'regdNo') {
+      return !(isNewUser && userRole === 'user');
+    }
     
     // Department is editable for superadmin only
     if (fieldName === 'department') {
@@ -172,7 +213,7 @@ const [isLoading, setIsLoading] = useState(true);
     try {
       // Validate required fields
       const requiredFields = ['name', 'email'];
-      if (userRole !== 'principal' && userRole !== 'superadmin') {
+      if (userRole === 'user') {
         requiredFields.push('regdNo');
       }
       
@@ -248,6 +289,155 @@ const [isLoading, setIsLoading] = useState(true);
 
   if (isLoading) {
     return <div className="loading-spinner"></div>;
+  }
+
+  if (userRole === 'master') {
+    return (
+      <div className="profile-container">
+        <div className="profile-header">
+          <h1>Master Profile</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/dashboard')}
+          >
+            Back to Dashboard
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="profile-content">
+          <div className="card" style={{ width: '100%' }}>
+            <h3>Basic Details</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Name</label>
+                <input value={formData.name || ''} disabled className="disabled-input" />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input value={formData.email || ''} disabled className="disabled-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === 'principal') {
+    return (
+      <div className="profile-container">
+        <div className="profile-header">
+          <h1>Principal Profile</h1>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/principal-panel')}
+          >
+            Back to Principal Panel
+          </button>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+
+        <div className="profile-content">
+          <div className="card" style={{ width: '100%' }}>
+            <h3>Basic Details</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Name</label>
+                <input
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  name="email"
+                  value={formData.email || ''}
+                  onChange={handleInputChange}
+                  disabled
+                  className="disabled-input"
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Mobile Number</label>
+                <input
+                  name="mobileNumber"
+                  type="tel"
+                  value={formData.mobileNumber || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                />
+              </div>
+              <div className="form-group">
+                <label>Date of Birth</label>
+                <input
+                  name="dob"
+                  type="date"
+                  value={formData.dob || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing && !isNewUser}
+                />
+              </div>
+            </div>
+
+            <div className="profile-actions" style={{ marginTop: '20px' }}>
+              {!isEditing && !isNewUser ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="action-buttons">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Profile'}
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      if (isNewUser) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || prev.name || '',
+                          email: profile?.email || prev.email || '',
+                          mobileNumber: '',
+                          dob: ''
+                        }));
+                      } else {
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: profile?.name || '',
+                          email: profile?.email || '',
+                          mobileNumber: profile?.mobileNumber || '',
+                          dob: profile?.dob || ''
+                        }));
+                        setIsEditing(false);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const renderTabContent = () => {
