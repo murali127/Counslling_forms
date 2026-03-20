@@ -178,9 +178,15 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res, next) => 
     const { role } = req.query;
     let query = { isDeleted: { $ne: true } };
 
-    // If an admin is requesting, only show users assigned to them
+    // If an admin is requesting, only show users assigned to them and from their department
     if (req.user.role === 'admin') {
         query.assignedMentor = req.user._id;
+        if (req.user.departmentId) {
+          query.departmentId = req.user.departmentId;
+        }
+    } else if (req.user.departmentId) {
+        // For superadmin/principal/master: filter by their department if assigned to one
+        query.departmentId = req.user.departmentId;
     }
     if (role) {
       query.role = role;
