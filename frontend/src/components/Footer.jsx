@@ -1,57 +1,80 @@
-// Footer.js
 import React from 'react';
 
 const Footer = () => {
-  return (
-    <footer style={styles.footer}>
-      <div style={styles.container}>
-        {/* GVP-IT Info */}
-        <p style={styles.info}>© 2024 GVP-IT. All Rights Reserved</p>
+  const year = new Date().getFullYear();
 
-        {/* Social Media Links */}
-        <div style={styles.socialLinks}>
-          <a href="https://facebook.com" target="_blank" rel="noreferrer" style={styles.link}>Facebook</a>
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" style={styles.link}>Twitter</a>
-          <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={styles.link}>LinkedIn</a>
+  return (
+    <footer style={footerStyle}>
+      <div style={containerStyle}>
+        <div style={leftStyle}>
+          <span style={{ fontWeight: 600, color: '#0f172a' }}>GVP-IT</span>
+          <span style={{ color: '#94a3b8', margin: '0 6px' }}>·</span>
+          <span>Gayatri Vidyaparishad College of Engineering (Autonomous)</span>
+        </div>
+        <div style={rightStyle}>
+          <span>© {year} All rights reserved</span>
+          <span style={{ color: '#e2e8f0', margin: '0 8px' }}>|</span>
+          <a
+            href="https://www.linkedin.com/school/gvp-college-of-engineering"
+            target="_blank"
+            rel="noreferrer"
+            style={linkStyle}
+            onMouseEnter={(e) => e.target.style.color = '#6366f1'}
+            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+          >
+            LinkedIn
+          </a>
+          <span style={{ color: '#e2e8f0', margin: '0 8px' }}>|</span>
+          <a
+            href="https://gvpce.ac.in"
+            target="_blank"
+            rel="noreferrer"
+            style={linkStyle}
+            onMouseEnter={(e) => e.target.style.color = '#6366f1'}
+            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+          >
+            Website
+          </a>
         </div>
       </div>
     </footer>
   );
 };
 
-// Inline styles for the component
-const styles = {
-  footer: {
-    padding: '20px 0',
-    backgroundColor: '#333',
-    color: '#fff',
-    textAlign: 'center',
-    borderTop: '2px solid #ccc',
-    marginTop: 'auto',  // Ensures the footer stays at the bottom
-  },
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 20px',
-  },
-  info: {
-    marginBottom: '10px',
-    fontSize: '14px',
-  },
-  socialLinks: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '15px',
-  },
-  link: {
-    color: '#fff',
-    textDecoration: 'none',
-    fontSize: '16px',
-    transition: 'color 0.3s ease',
-  },
-  linkHover: {
-    color: '#007bff',
-  },
+const footerStyle = {
+  backgroundColor: '#ffffff',
+  borderTop:       '1px solid #e2e8f0',
+  padding:         '16px 24px',
+  marginTop:       'auto',
+};
+
+const containerStyle = {
+  maxWidth:        '1280px',
+  margin:          '0 auto',
+  display:         'flex',
+  alignItems:      'center',
+  justifyContent:  'space-between',
+  flexWrap:        'wrap',
+  gap:             '8px',
+};
+
+const leftStyle = {
+  fontSize: '13px',
+  color:    '#475569',
+};
+
+const rightStyle = {
+  fontSize:   '13px',
+  color:      '#94a3b8',
+  display:    'flex',
+  alignItems: 'center',
+};
+
+const linkStyle = {
+  color:          '#94a3b8',
+  textDecoration: 'none',
+  fontSize:       '13px',
+  transition:     'color 150ms ease',
 };
 
 export default Footer;

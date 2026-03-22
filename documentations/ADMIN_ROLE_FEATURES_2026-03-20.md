@@ -53,7 +53,7 @@ Dashboard buttons are now aligned with requested modules and routing:
 - Change:
   - If a matching student already exists, API now returns structured assignment-aware error.
   - Error includes assignment information when the student is assigned to another mentor/admin.
-
+                                                                          
 ### Bulk smart-create assignment
 - File: `backend/routes/admin.js`
 - Route: `POST /api/admin/users/smart-create`

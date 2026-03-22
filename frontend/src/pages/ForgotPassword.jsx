@@ -89,8 +89,8 @@ const ForgotPassword = () => {
               
               <Box textAlign="center" mt={2}>
                 <Typography variant="body2">
-                  <Link to="/signup" style={{ textDecoration: 'none' }}>
-                    Back to Login
+                  <Link to="/signup" style={{ textDecoration: 'none', color: '#6366f1', fontWeight: 500 }}>
+                    ← Back to Sign In
                   </Link>
                 </Typography>
               </Box>
@@ -98,8 +98,8 @@ const ForgotPassword = () => {
           ) : (
             <Box textAlign="center" mt={2}>
               <Typography variant="body2">
-                <Link to="/signup" style={{ textDecoration: 'none' }}>
-                  Back to Login
+                <Link to="/signup" style={{ textDecoration: 'none', color: '#6366f1', fontWeight: 500 }}>
+                  ← Back to Sign In
                 </Link>
               </Typography>
             </Box>

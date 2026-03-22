@@ -128,8 +128,8 @@ const ResetPassword = () => {
                 This password reset link is invalid or has expired.
               </Typography>
               <Typography variant="body2">
-                <Link to="/forgot-password" style={{ textDecoration: 'none' }}>
-                  Request a new password reset link
+                <Link to="/forgot-password" style={{ textDecoration: 'none', color: '#6366f1', fontWeight: 500 }}>
+                  Request a new reset link
                 </Link>
               </Typography>
             </Box>
@@ -137,8 +137,8 @@ const ResetPassword = () => {
           
           <Box textAlign="center" mt={2}>
             <Typography variant="body2">
-              <Link to="/signup" style={{ textDecoration: 'none' }}>
-                Back to Login
+              <Link to="/signup" style={{ textDecoration: 'none', color: '#6366f1', fontWeight: 500 }}>
+                ← Back to Sign In
               </Link>
             </Typography>
           </Box>

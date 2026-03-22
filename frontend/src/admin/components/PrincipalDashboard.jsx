@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -19,10 +19,10 @@ import apiClient from '../../apiClient';
 
 const ROLES = ['user', 'admin', 'superadmin', 'principal'];
 
-const PrincipalDashboard = () => {
+const PrincipalDashboard = ({ section: sectionProp, onBack }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const selectedSection = searchParams.get('section') || 'departments';
+  const selectedSection = sectionProp || searchParams.get('section') || 'departments';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,48 +55,69 @@ const PrincipalDashboard = () => {
     setMessage('');
   };
 
-  const loadAll = async () => {
+  const loadSection = useCallback(async (section) => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        navigate('/signup');
-        return;
+      if (section === 'departments') {
+        const [deptRes, saRes] = await Promise.all([
+          apiClient.get('/api/principal/departments'),
+          apiClient.get('/api/principal/superadmins'),
+        ]);
+        setDepartments(deptRes.data || []);
+        setSuperadmins(saRes.data?.data || []);
+
+      } else if (section === 'superadmins') {
+        const [saRes, deptRes] = await Promise.all([
+          apiClient.get('/api/principal/superadmins'),
+          apiClient.get('/api/principal/departments'),
+        ]);
+        setSuperadmins(saRes.data?.data || []);
+        setDepartments(deptRes.data || []);
+
+      } else if (section === 'admins') {
+        const [adminsRes, saRes, deptRes] = await Promise.all([
+          apiClient.get('/api/principal/admins'),
+          apiClient.get('/api/principal/superadmins'),
+          apiClient.get('/api/principal/departments'),
+        ]);
+        setAdmins(adminsRes.data?.data || []);
+        setSuperadmins(saRes.data?.data || []);
+        setDepartments(deptRes.data || []);
+
+      } else if (section === 'students') {
+        const [overviewRes, deptRes, adminsRes] = await Promise.all([
+          apiClient.get('/api/principal/overview'),
+          apiClient.get('/api/principal/departments'),
+          apiClient.get('/api/principal/admins'),
+        ]);
+        setStudents(overviewRes.data?.students || []);
+        setDepartments(deptRes.data || []);
+        setAdmins(adminsRes.data?.data || []);
+
+      } else if (section === 'counseling') {
+        const overviewRes = await apiClient.get('/api/principal/overview');
+        setStudents(overviewRes.data?.students || []);
+
+      } else if (section === 'analytics') {
+        const res = await apiClient.get('/api/principal/analytics/profiles');
+        setAnalytics(res.data?.analytics || {});
+
+      } else if (section === 'batches') {
+        const res = await apiClient.get('/api/principal/batches');
+        setBatches(res.data?.batches || []);
       }
-
-      const [userRes, departmentsRes, superadminsRes, adminsRes, overviewRes, analyticsRes, batchesRes] = await Promise.all([
-        apiClient.get('/api/auth/user', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/departments', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/superadmins', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/admins', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/overview', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/analytics/profiles', { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get('/api/principal/batches', { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-
-      if (userRes.data?.role !== 'principal' && userRes.data?.role !== 'master') {
-        navigate('/dashboard');
-        return;
-      }
-
-      setDepartments(departmentsRes.data || []);
-      setSuperadmins(superadminsRes.data?.data || []);
-      setAdmins(adminsRes.data?.data || []);
-      setStudents(overviewRes.data?.students || []);
-      setAnalytics(analyticsRes.data?.analytics || {});
-      setBatches(batchesRes.data?.batches || []);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load principal dashboard');
+      setError(err.response?.data?.error || 'Failed to load data.');
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSection]);
+    loadSection(selectedSection);
+  }, [selectedSection, loadSection]);
 
   const saveDepartment = async () => {
     clearBanner();
@@ -118,7 +139,7 @@ const PrincipalDashboard = () => {
         setMessage('Department created successfully.');
       }
       setDepartmentForm({ id: '', name: '', code: '', superadminId: '' });
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save department');
     }
@@ -133,7 +154,7 @@ const PrincipalDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Department deleted successfully.');
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete department');
     }
@@ -159,7 +180,7 @@ const PrincipalDashboard = () => {
         setMessage('Super admin created successfully.');
       }
       setSuperadminForm({ id: '', username: '', email: '', departmentId: '' });
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save super admin');
     }
@@ -174,7 +195,7 @@ const PrincipalDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Super admin deleted successfully.');
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete super admin');
     }
@@ -206,7 +227,7 @@ const PrincipalDashboard = () => {
       }
 
       setAdminForm({ id: '', username: '', email: '', departmentId: '', assignedSuperadmin: '' });
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save admin');
     }
@@ -221,7 +242,7 @@ const PrincipalDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessage('Admin deleted successfully.');
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete admin');
     }
@@ -244,7 +265,7 @@ const PrincipalDashboard = () => {
       setMessage('Admin assignment to super admin updated successfully.');
       setSelectedAdminIds([]);
       setBulkSuperadminId('');
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to assign admins');
     }
@@ -273,7 +294,7 @@ const PrincipalDashboard = () => {
 
       setMessage('Students assigned to admin successfully.');
       setStudentAssign({ departmentId: '', adminId: '', studentIds: '' });
-      await loadAll();
+      await loadSection(selectedSection);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to assign students');
     }
@@ -323,14 +344,19 @@ const PrincipalDashboard = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: '1200px', margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        Principal Dashboard
-      </Typography>
-
-      <Box sx={{ mb: 2 }}>
-        <Button variant="outlined" onClick={() => navigate('/principal-panel')}>Back to Principal Panel</Button>
-      </Box>
+    <Box sx={{ p: 0 }}>
+      {onBack && (
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onBack}
+            sx={{ borderColor: '#e2e8f0', color: '#475569', '&:hover': { borderColor: '#6366f1', color: '#6366f1' } }}
+          >
+            ← Overview
+          </Button>
+        </Box>
+      )}
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}

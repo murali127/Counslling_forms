@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUserGraduate } from 'react-icons/fa'; // Import an icon from react-icons
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUserGraduate } from 'react-icons/fa';
 import apiClient from '../apiClient';
-import './css/SignUp.css'; // Import CSS file
+import gvplog from '../images/gvplogo.jpg';
 
 const Auth = () => {
   const navigate = useNavigate();
   const formRef = useRef(null);
 
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
 
@@ -28,196 +24,305 @@ const Auth = () => {
     "https://www.gvpce.ac.in/slideshow/home/Homepageslideshowphotos/2.College&Departments/23.jpg",
   ];
 
-  // Automatically cycle through images
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImage((prevIndex) => (prevIndex + 1) % images.length);
-    }, 3000);
-
+    const interval = setInterval(() => setCurrentImage((i) => (i + 1) % images.length), 4000);
     return () => clearInterval(interval);
   }, [images.length]);
 
-  // Focus the first input when the form toggles
   useEffect(() => {
-    if (formRef.current) {
-      const inputs = formRef.current.querySelectorAll('input');
-      inputs[0]?.focus(); // Focus the first input
-    }
+    formRef.current?.querySelectorAll('input')[0]?.focus();
   }, [isSignUp]);
 
-  // Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    setError(''); // Clear error on input change
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
   };
 
-  // Handle keyboard navigation (ArrowUp and ArrowDown)
   const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const inputs = formRef.current.querySelectorAll('input');
-      const currentIndex = Array.from(inputs).indexOf(document.activeElement);
-
-      if (e.key === 'ArrowDown') {
-        const nextIndex = (currentIndex + 1) % inputs.length;
-        inputs[nextIndex]?.focus();
-      } else if (e.key === 'ArrowUp') {
-        const prevIndex = (currentIndex - 1 + inputs.length) % inputs.length;
-        inputs[prevIndex]?.focus();
-      }
-    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const inputs = formRef.current.querySelectorAll('input');
+    const idx = Array.from(inputs).indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') inputs[(idx + 1) % inputs.length]?.focus();
+    else inputs[(idx - 1 + inputs.length) % inputs.length]?.focus();
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
     if (isSignUp && formData.password !== formData.confirmPassword) {
       setError("Passwords don't match");
       return;
     }
-
-    // If signing up, ensure students use college domain email (e.g., 322103311030@gvpce.ac.in)
-    if (isSignUp) {
-      const studentEmailRegex = /^\d+@gvpce\.ac\.in$/i;
-      if (!studentEmailRegex.test(formData.email)) {
-        setError('Please use your college email (e.g. 322103311030@gvpce.ac.in)');
-        return;
-      }
+    if (isSignUp && !/^\d+@gvpce\.ac\.in$/i.test(formData.email)) {
+      setError('Please use your college email (e.g. 322103311030@gvpce.ac.in)');
+      return;
     }
-
     try {
+      setLoading(true);
+      setError('');
       const body = isSignUp
-        ? {
-            username: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-          }
-        : {
-            email: formData.email,
-            password: formData.password,
-          };
-
-      const endpoint = `/api/auth/${isSignUp ? 'signup' : 'signin'}`;
-      const { data } = await apiClient.post(endpoint, body);
-
+        ? { username: formData.fullName, email: formData.email, password: formData.password }
+        : { email: formData.email, password: formData.password };
+      const { data } = await apiClient.post(`/api/auth/${isSignUp ? 'signup' : 'signin'}`, body);
       localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userRole', data.role);   // role stored here
+      localStorage.setItem('userRole', data.role);
       localStorage.setItem('userEmail', data.email);
       localStorage.setItem('userName', data.username);
-
-      // Redirect to role-specific panel
-      const rolePanelMap = {
-        user: '/user-panel',
-        mentor: '/user-panel',
-        admin: '/admin-panel',
-        superadmin: '/superadmin-panel',
-        principal: '/principal-panel',
-        master: '/master-panel'
-      };
-
-      const redirectPath = rolePanelMap[data.role] || '/dashboard';
-      navigate(redirectPath);
+      const map = { user:'/user-panel', mentor:'/user-panel', admin:'/admin-panel', superadmin:'/superadmin-panel', principal:'/principal-panel', master:'/master-panel' };
+      navigate(map[data.role] || '/dashboard');
     } catch (err) {
-      const message = err.response?.data?.error || 'Server error, please try again later';
-      setError(message);
+      setError(err.response?.data?.error || 'Server error, please try again later');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      {/* Background Image Slideshow */}
-      <div className="auth-background">
-        <img src={images[currentImage]} alt="Slideshow" className="auth-image" />
+    <div style={containerStyle}>
+      {/* Left — Image Panel */}
+      <div style={imagePanelStyle}>
+        {/* Image slideshow */}
+        {images.map((src, i) => (
+          <div
+            key={i}
+            style={{
+              ...imageBgStyle,
+              opacity: i === currentImage ? 1 : 0,
+              transition: 'opacity 1s ease',
+            }}
+          >
+            <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        ))}
+        {/* Overlay content */}
+        <div style={imageOverlayStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+            <img src={gvplog} alt="GVP Logo" style={{ width: '44px', height: '44px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.6)', objectFit: 'cover' }} />
+            <div>
+              <div style={{ color: '#fff', fontWeight: 700, fontSize: '15px', lineHeight: 1.2 }}>GVP-IT</div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>Student Portal</div>
+            </div>
+          </div>
+          <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.25, marginBottom: '12px' }}>
+            Shape your academic journey
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '14px', lineHeight: 1.7, maxWidth: '320px' }}>
+            Access your counselling forms, track attendance, view marks and connect with your mentor — all in one place.
+          </p>
+          {/* Dots */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '32px' }}>
+            {images.map((_, i) => (
+              <div key={i} style={{ width: i === currentImage ? '20px' : '6px', height: '6px', borderRadius: '3px', background: i === currentImage ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s ease' }} />
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Form Container */}
-      <div className={`auth-form-container ${isSignUp ? 'signup' : 'signin'}`}>
-        <div className="auth-form-wrapper">
-          {/* Left Side (70% - Form) */}
-          <div className="auth-form-main">
-            <h2>{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
-            {error && <p className="auth-error">{error}</p>}
-            <form onSubmit={handleSubmit} className="auth-form" ref={formRef} onKeyDown={handleKeyDown}>
+      {/* Right — Form Panel */}
+      <div style={formPanelStyle}>
+        <div style={formInnerStyle}>
+          {/* Header */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+              <FaUserGraduate size={20} color="#6366f1" />
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#6366f1' }}>GVP-IT Portal</span>
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isSignUp ? 'signup-header' : 'signin-header'}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+              >
+                <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '6px' }}>
+                  {isSignUp ? 'Create account' : 'Welcome back'}
+                </h1>
+                <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+                  {isSignUp ? 'Register with your college email to get started.' : 'Sign in to access your student dashboard.'}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Error */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -8, height: 0 }}
+                style={{ background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#dc2626' }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Form */}
+          <AnimatePresence mode="wait">
+            <motion.form
+              key={isSignUp ? 'signup-form' : 'signin-form'}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+              onSubmit={handleSubmit}
+              ref={formRef}
+              onKeyDown={handleKeyDown}
+              style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+            >
               {isSignUp && (
+                <div>
+                  <label style={labelStyle}>Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    className="input-base"
+                    required
+                  />
+                </div>
+              )}
+              <div>
+                <label style={labelStyle}>Email address</label>
                 <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  placeholder="Full Name"
-                  className="auth-input"
+                  placeholder={isSignUp ? "322103311030@gvpce.ac.in" : "your@email.com"}
+                  className="input-base"
                   required
                 />
-              )}
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Email"
-                className="auth-input"
-                required
-              />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Password"
-                className="auth-input"
-                required
-              />
-              {isSignUp && (
+                {isSignUp && (
+                  <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                    Use your college email: rollno@gvpce.ac.in
+                  </p>
+                )}
+              </div>
+              <div>
+                <label style={labelStyle}>Password</label>
                 <input
                   type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  name="password"
+                  value={formData.password}
                   onChange={handleChange}
-                  placeholder="Confirm Password"
-                  className="auth-input"
+                  placeholder="Enter your password"
+                  className="input-base"
                   required
                 />
+              </div>
+              {isSignUp && (
+                <div>
+                  <label style={labelStyle}>Confirm Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter your password"
+                    className="input-base"
+                    required
+                  />
+                </div>
               )}
-              <button type="submit" className="auth-button">
-                {isSignUp ? 'Sign Up' : 'Sign In'}
-              </button>
               {!isSignUp && (
-                <div style={{ textAlign: 'right', marginTop: '8px', marginBottom: '16px' }}>
-                  <Link to="/forgot-password" style={{ textDecoration: 'none', color: '#e50914' }}>
+                <div style={{ textAlign: 'right', marginTop: '-4px' }}>
+                  <Link to="/forgot-password" style={{ fontSize: '13px', color: '#6366f1', textDecoration: 'none', fontWeight: 500 }}>
                     Forgot password?
                   </Link>
                 </div>
               )}
-            </form>
-          </div>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+                style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '14px', marginTop: '4px' }}
+              >
+                {loading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />
+                    {isSignUp ? 'Creating account...' : 'Signing in...'}
+                  </span>
+                ) : (isSignUp ? 'Create account' : 'Sign in')}
+              </button>
+            </motion.form>
+          </AnimatePresence>
 
-          {/* Right Side (30% - Redirection Div) */}
-          <div className="auth-form-side">
-            <div className="auth-form-icon">
-              <FaUserGraduate size={50} color="#e50914" />
-            </div>
-            <h2>{isSignUp ? 'Already have an account?' : 'Don’t have an account?'}</h2>
-            <div
-              onClick={() => setIsSignUp(!isSignUp)}
-              style={{
-                padding: '1cm',
-                cursor: 'pointer',
-                display: 'inline-block',
-                textAlign: 'center'
-              }}
+          {/* Toggle */}
+          <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#475569' }}>
+            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              onClick={() => { setIsSignUp((v) => !v); setError(''); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', fontWeight: 600, fontSize: '14px', padding: 0, fontFamily: 'inherit' }}
             >
-              <p style={{ margin: 0 }}>{isSignUp ? 'Sign In' : 'Create One'}</p>
-            </div>
+              {isSignUp ? 'Sign in' : 'Create one'}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Spinner keyframe */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
+};
+
+/* Styles */
+const containerStyle = {
+  display:        'flex',
+  height:         'calc(100vh - 64px)',
+  overflow:       'hidden',
+  background:     '#f8fafc',
+};
+
+const imagePanelStyle = {
+  flex:           '0 0 42%',
+  position:       'relative',
+  overflow:       'hidden',
+  background:     '#0f172a',
+};
+
+const imageBgStyle = {
+  position:   'absolute',
+  inset:       0,
+  zIndex:      0,
+};
+
+const imageOverlayStyle = {
+  position:       'absolute',
+  inset:          0,
+  zIndex:         2,
+  background:     'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.4) 60%, rgba(15,23,42,0.25) 100%)',
+  display:        'flex',
+  flexDirection:  'column',
+  justifyContent: 'flex-end',
+  padding:        '40px',
+};
+
+const formPanelStyle = {
+  flex:             1,
+  display:          'flex',
+  alignItems:       'center',
+  justifyContent:   'center',
+  overflowY:        'auto',
+  padding:          '40px 24px',
+};
+
+const formInnerStyle = {
+  width:    '100%',
+  maxWidth: '400px',
+};
+
+const labelStyle = {
+  display:      'block',
+  fontSize:     '13px',
+  fontWeight:   500,
+  color:        '#475569',
+  marginBottom: '6px',
 };
 
 export default Auth;
