@@ -47,7 +47,7 @@ router.get("/", authMiddleware, async (req, res, next) => {
     return res.status(200).json({
       success: true,
       hasProfile: true,
-      profile: profile.toObject()
+      profile: JSON.parse(JSON.stringify(profile))
     });
   } catch (err) { return next(err);
   }
@@ -265,7 +265,7 @@ router.patch("/attendance/self", authMiddleware, async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Attendance updated successfully",
-      attendance: updated.attendance
+      attendance: JSON.parse(JSON.stringify(updated.attendance))
     });
   } catch (err) { return next(err); }
 });
