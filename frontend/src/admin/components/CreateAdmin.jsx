@@ -116,7 +116,7 @@ function CreateAdmin() {
             type="text"
             value={formData.department}
             disabled
-            style={{ backgroundColor: '#e0e0e0', cursor: 'not-allowed' }}
+            style={{ backgroundColor: 'rgba(71,85,105,0.20)', color: 'rgba(255,255,255,0.40)', cursor: 'not-allowed', border: '1px solid rgba(255,255,255,0.12)' }}
           />
         </div>
 

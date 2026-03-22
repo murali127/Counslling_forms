@@ -97,7 +97,7 @@ function ManageAdmins() {
       <button
         onClick={handleBulkDelete}
         disabled={selectedUserIds.length === 0}
-        style={{ marginBottom: '10px', marginLeft: '10px', color: '#fff', backgroundColor: '#b71c1c', border: '1px solid #b71c1c', padding: '6px 10px' }}
+        style={{ marginBottom: '10px', marginLeft: '10px', color: '#fca5a5', backgroundColor: 'rgba(185,28,28,0.20)', border: '1px solid rgba(248,113,113,0.30)', padding: '6px 10px', borderRadius: 6 }}
       >
         Delete Selected ({selectedUserIds.length})
       </button>
@@ -147,7 +147,7 @@ function ManageAdmins() {
                     if (e.target.checked) setSelectedUserIds((prev) => [...new Set([...prev, a._id])]);
                     else setSelectedUserIds((prev) => prev.filter((id) => id !== a._id));
                   }}
-                  sx={{ color: '#111', '&.Mui-checked': { color: '#d32f2f' } }}
+                  sx={{ color: 'rgba(255,255,255,0.45)', '&.Mui-checked': { color: '#fca5a5' } }}
                 />
               </td>
               <td>{a.employee_name || a.username}</td>
@@ -160,7 +160,7 @@ function ManageAdmins() {
                     Send Details
                   </button>
                 )}
-                <button onClick={() => handleNotifyAdmin(a._id, a.email)} style={{ marginRight: '8px', backgroundColor: '#1976d2', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
+                <button onClick={() => handleNotifyAdmin(a._id, a.email)} style={{ marginRight: '8px', backgroundColor: 'rgba(129,140,248,0.20)', color: '#a5b4fc', border: '1px solid rgba(129,140,248,0.30)', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>
                   Notify
                 </button>
                 <button onClick={() => handleDeleteAdmin(a._id)} style={{ color: 'red' }}>Delete</button>

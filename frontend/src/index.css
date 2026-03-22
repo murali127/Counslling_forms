@@ -137,10 +137,15 @@ body {
   font-family: var(--font-family);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg);
+  color: rgba(255,255,255,0.85);
+  background-color: rgba(10,15,26,1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+#root {
+  background: rgba(10,15,26,1);
   min-height: 100vh;
 }
 
@@ -370,4 +375,247 @@ input, select, textarea {
   border-radius: var(--radius-lg) !important;
   font-size: var(--text-sm) !important;
   box-shadow: var(--shadow-lg) !important;
+}
+
+/* =====================================================
+   GLOBAL DARK OVERRIDES — Pearl Frost theme
+   Fixes all pages that use CSS variables or MUI defaults
+   ===================================================== */
+
+/* Profile page */
+.profile-container {
+  background: transparent !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+.profile-container h1, .profile-container h2, .profile-container h3,
+.profile-container label, .profile-container p, .profile-container span,
+.profile-container th, .profile-container td {
+  color: rgba(255,255,255,0.85) !important;
+}
+.profile-sidebar, .profile-main-content, .profile-section,
+.form-section, .info-card, .tab-content {
+  background: rgba(148,163,184,0.10) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+.profile-header {
+  border-bottom-color: rgba(255,255,255,0.18) !important;
+}
+.profile-picture-placeholder {
+  background: linear-gradient(135deg, rgba(148,163,184,0.3), rgba(71,85,105,0.5)) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+.tab-btn, .tab-button {
+  background: rgba(71,85,105,0.18) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.6) !important;
+}
+.tab-btn.active, .tab-button.active {
+  background: rgba(148,163,184,0.25) !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.35) !important;
+}
+.surface-card, .info-row, .section-divider {
+  background: rgba(148,163,184,0.08) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.75) !important;
+}
+input, select, textarea {
+  background: rgba(71,85,105,0.18) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,0.3) !important;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(226,232,240,0.5) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(148,163,184,0.15) !important;
+}
+
+/* All MUI Paper/containers globally — catches Attendance, MarksTable, MentorGrading etc. */
+.MuiPaper-root:not(.MuiMenu-paper):not(.MuiPopover-paper):not(.MuiAutocomplete-paper) {
+  background: rgba(148,163,184,0.10) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+.MuiTableCell-root {
+  color: rgba(255,255,255,0.80) !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+.MuiTableHead-root .MuiTableCell-root {
+  background: rgba(71,85,105,0.18) !important;
+  color: rgba(255,255,255,0.45) !important;
+}
+.MuiTableRow-root:hover .MuiTableCell-root {
+  background: rgba(148,163,184,0.08) !important;
+}
+.MuiInputBase-root, .MuiOutlinedInput-root {
+  background: rgba(71,85,105,0.18) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+.MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255,255,255,0.18) !important;
+}
+.MuiInputLabel-root, .MuiFormLabel-root {
+  color: rgba(255,255,255,0.45) !important;
+}
+.MuiSelect-icon, .MuiSvgIcon-root {
+  color: rgba(255,255,255,0.5) !important;
+}
+.MuiMenuItem-root {
+  background: rgba(10,15,26,0.97) !important;
+  color: rgba(255,255,255,0.82) !important;
+}
+.MuiMenuItem-root:hover {
+  background: rgba(148,163,184,0.15) !important;
+}
+.MuiTypography-root { color: rgba(255,255,255,0.82) !important; }
+.MuiTypography-h4, .MuiTypography-h5, .MuiTypography-h6 { color: #fff !important; }
+.MuiButton-contained {
+  background: linear-gradient(135deg, #4338ca, #6d28d9, #7c3aed) !important;
+  color: #fff !important;
+}
+.MuiAlert-standardSuccess { background: rgba(4,120,87,0.2) !important; color: #6ee7b7 !important; }
+.MuiAlert-standardError   { background: rgba(185,28,28,0.2) !important; color: #fca5a5 !important; }
+.MuiAlert-standardWarning { background: rgba(180,83,9,0.2) !important;  color: #fcd34d !important; }
+.MuiAlert-standardInfo    { background: rgba(8,145,178,0.2) !important; color: #7dd3fc !important; }
+.MuiChip-root { background: rgba(71,85,105,0.3) !important; color: rgba(255,255,255,0.8) !important; }
+.MuiDivider-root { border-color: rgba(255,255,255,0.12) !important; }
+.MuiCircularProgress-root { color: rgba(226,232,240,0.8) !important; }
+
+/* =====================================================
+   GLASS PANEL — MUI dark overrides
+   Applied inside .glass-section wrapper so MUI Paper,
+   Table, TextField components inherit dark glass theme
+   ===================================================== */
+@keyframes glassPulse {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.65; }
+}
+
+/* MUI Paper → Pearl Frost glass card */
+.glass-section .MuiPaper-root {
+  background: rgba(148, 163, 184, 0.10) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 16px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* MUI Typography inside glass */
+.glass-section .MuiTypography-root {
+  color: inherit !important;
+}
+.glass-section .MuiTypography-h4,
+.glass-section .MuiTypography-h5,
+.glass-section .MuiTypography-h6 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.glass-section .MuiTypography-body2,
+.glass-section .MuiTypography-subtitle1 {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* MUI Table */
+.glass-section .MuiTableHead-root .MuiTableCell-root {
+  background: rgba(71, 85, 105, 0.18) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700 !important;
+}
+.glass-section .MuiTableBody-root .MuiTableCell-root {
+  color: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  font-size: 13px !important;
+}
+.glass-section .MuiTableRow-root:hover .MuiTableCell-root {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+/* Kill MUI default hover that flashes white */
+.glass-section .MuiTableRow-root.MuiTableRow-hover:hover {
+  background: transparent !important;
+}
+.glass-section .MuiTableRow-root:hover {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+/* MUI TextField + Select */
+.glass-section .MuiOutlinedInput-root {
+  background: rgba(71, 85, 105, 0.18) !important;
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.glass-section .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+.glass-section .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(99, 102, 241, 0.45) !important;
+}
+.glass-section .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(99, 102, 241, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+.glass-section .MuiInputLabel-root {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+.glass-section .MuiInputLabel-root.Mui-focused {
+  color: #a78bfa !important;
+}
+.glass-section .MuiSelect-icon {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+.glass-section .MuiMenuItem-root {
+  background: #1e1b4b !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+.glass-section .MuiMenuItem-root:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+}
+
+/* MUI Button */
+.glass-section .MuiButton-contained {
+  background: linear-gradient(135deg, #4338ca, #6d28d9, #7c3aed) !important;
+  box-shadow: 0 4px 20px rgba(109,40,217,0.45) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+.glass-section .MuiButton-outlined {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 10px !important;
+  text-transform: none !important;
+}
+.glass-section .MuiButton-outlined:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+.glass-section .MuiButton-colorError {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* MUI Alert */
+.glass-section .MuiAlert-root {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Checkbox */
+.glass-section input[type="checkbox"] {
+  accent-color: #6366f1;
 }

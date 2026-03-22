@@ -30,9 +30,11 @@ const Profile = () => {
     const savedDraft = sessionStorage.getItem('profileFormDraft');
     if (savedDraft) {
       try {
-        return JSON.parse(savedDraft);
+        const parsed = JSON.parse(savedDraft);
+        // Re-attach empty profilePicture since it's excluded from the draft
+        return { ...initialProfileState, ...parsed, profilePicture: '' };
       } catch (e) {
-        console.error("Failed to parse draft", e);
+        sessionStorage.removeItem('profileFormDraft');
       }
     }
     return initialProfileState;
@@ -50,7 +52,14 @@ const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (isEditing || isNewUser) {
-      sessionStorage.setItem("profileFormDraft", JSON.stringify(formData));
+      try {
+        // Exclude profilePicture — base64 images are too large for sessionStorage
+        const { profilePicture, ...draftWithoutPicture } = formData;
+        sessionStorage.setItem("profileFormDraft", JSON.stringify(draftWithoutPicture));
+      } catch (e) {
+        // If quota is still exceeded (large arrays etc.), silently skip the draft
+        sessionStorage.removeItem("profileFormDraft");
+      }
     }
   }, [formData, isEditing, isNewUser]);
 

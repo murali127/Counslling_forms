@@ -1,60 +1,51 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { User, LayoutDashboard, LogOut } from 'lucide-react';
 import apiClient from '../apiClient';
 import gvplog from '../images/gvplogo.jpg';
 
 const Header = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isSignupPage = location.pathname === '/signup';
+  const navigate        = useNavigate();
+  const location        = useLocation();
+  const isSignupPage    = location.pathname === '/signup';
   const isAuthenticated = localStorage.getItem('authToken');
   const [user, setUser] = useState({ name: '', email: '', profilePicture: '', profileCompletion: 0 });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
         setIsDropdownOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
-  // Fetch user details
   useEffect(() => {
     if (!isAuthenticated) return;
-    const fetchUser = async () => {
+    (async () => {
       try {
         const res = await apiClient.get('/api/auth/user', {
           headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
         });
         setUser({
-          name: res.data.username || 'User',
-          email: res.data.email || '',
-          profilePicture: res.data.profilePicture || '',
+          name:             res.data.username || 'User',
+          email:            res.data.email || '',
+          profilePicture:   res.data.profilePicture || '',
           profileCompletion: res.data.role === 'master' ? 100 : (res.data.profileCompletion || 0),
         });
       } catch (err) {
-        console.error('Header: failed to fetch user', err);
+        console.error('Header fetch failed', err);
       }
-    };
-    fetchUser();
+    })();
   }, [isAuthenticated]);
 
   const handleLogoClick = () => {
     if (!isAuthenticated) { navigate('/landingpage'); return; }
     const role = localStorage.getItem('userRole') || localStorage.getItem('role');
-    const map = {
-      superadmin: '/superadmin-panel',
-      principal:  '/principal-panel',
-      master:     '/master-panel',
-      admin:      '/admin-panel',
-    };
+    const map  = { superadmin: '/superadmin-panel', principal: '/principal-panel', master: '/master-panel', admin: '/admin-panel' };
     navigate(map[role] || '/dashboard');
   };
 
@@ -67,56 +58,63 @@ const Header = () => {
     window.location.reload();
   };
 
-  const completion = Math.min(user.profileCompletion || 0, 100);
-  // Conic gradient for profile ring: primary color fills based on %
-  const ringGradient = `conic-gradient(#6366f1 ${completion}%, #e2e8f0 ${completion}%)`;
+  const completion   = Math.min(user.profileCompletion || 0, 100);
+  const ringGradient = `conic-gradient(rgba(226,232,240,0.9) ${completion}%, rgba(255,255,255,0.12) ${completion}%)`;
+  const initials     = user.name ? user.name.charAt(0).toUpperCase() : '?';
 
   return (
     <header style={headerStyle}>
-      {/* Logo + Name */}
+      {/* Pearl Frost border bottom */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.18)' }} />
+
+      {/* Logo */}
       <div style={logoContainerStyle} onClick={handleLogoClick} role="button" tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
       >
-        <img src={gvplog} alt="GVP Logo" style={logoImgStyle} />
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-          <span style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em' }}>
-            GVPCE
-          </span>
-          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 400 }}>
-            Student Portal
-          </span>
+        <div style={logoWrapStyle}>
+          <img src={gvplog} alt="GVPCE Logo" style={logoImgStyle} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>GVPCE</span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', fontWeight: 400 }}>Student Portal</span>
         </div>
       </div>
 
-      {/* Title — hidden on small screens via inline media workaround */}
+      {/* Center title */}
       <h1 style={titleStyle}>
         Gayatri Vidyaparishad College of Engineering
       </h1>
 
-      {/* Right section */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Auth section */}
+      {/* Right side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {isSignupPage ? (
-          <img src={gvplog} alt="GVP Logo" style={logoImgStyle} />
+          <div style={logoWrapStyle}>
+            <img src={gvplog} alt="GVPCE" style={logoImgStyle} />
+          </div>
         ) : !isAuthenticated ? (
-          <button className="btn btn-primary" onClick={() => navigate('/signup')} style={{ fontSize: '13px', padding: '8px 16px' }}>
+          <button
+            onClick={() => navigate('/signup')}
+            style={signInBtnStyle}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(226,232,240,0.2)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(148,163,184,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.28)'; }}
+          >
             Sign In
           </button>
         ) : (
           <div ref={dropdownRef} style={{ position: 'relative' }}>
-            {/* Avatar with completion ring */}
+            {/* Avatar ring button */}
             <button
-              onClick={() => setIsDropdownOpen((o) => !o)}
-              style={avatarBtnStyle}
+              onClick={() => setIsDropdownOpen(o => !o)}
+              style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title={`Profile ${completion}% complete`}
             >
-              <div style={{ ...ringWrapStyle, background: ringGradient }}>
-                <div style={ringInnerStyle}>
+              <div style={{ width: 42, height: 42, borderRadius: '50%', padding: '2.5px', background: ringGradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 35, height: 35, borderRadius: '50%', background: 'rgba(10,15,26,1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {user.profilePicture ? (
                     <img src={user.profilePicture} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                   ) : (
-                    <div style={avatarFallbackStyle}>
-                      {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'rgba(148,163,184,0.25)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14 }}>
+                      {initials}
                     </div>
                   )}
                 </div>
@@ -127,58 +125,52 @@ const Header = () => {
             <AnimatePresence>
               {isDropdownOpen && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                  initial={{ opacity: 0, scale: 0.94, y: -8 }}
+                  animate={{ opacity: 1, scale: 1,    y: 0 }}
+                  exit={  { opacity: 0, scale: 0.94, y: -8 }}
+                  transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
                   style={dropdownStyle}
                 >
-                  {/* User info */}
-                  <div style={dropdownHeaderStyle}>
-                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a', marginBottom: '2px' }}>
-                      {user.name}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px' }}>
-                      {user.email}
-                    </div>
-                    {/* Completion bar */}
-                    <div style={{ fontSize: '12px', color: '#475569', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                  {/* Header */}
+                  <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#fff', marginBottom: 2 }}>{user.name}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginBottom: 12 }}>{user.email}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 6 }}>
                       <span>Profile completion</span>
-                      <span style={{ fontWeight: 600, color: '#6366f1' }}>{completion}%</span>
+                      <span style={{ fontWeight: 700, color: 'rgba(226,232,240,0.9)' }}>{completion}%</span>
                     </div>
-                    <div style={{ height: '4px', background: '#f1f5f9', borderRadius: '9999px', overflow: 'hidden' }}>
+                    <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${completion}%` }}
                         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-                        style={{ height: '100%', background: '#6366f1', borderRadius: '9999px' }}
+                        style={{ height: '100%', background: 'linear-gradient(90deg, rgba(148,163,184,0.8), rgba(226,232,240,1))', borderRadius: 99 }}
                       />
                     </div>
                   </div>
 
-                  <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }} />
-
+                  {/* Nav items */}
                   {[
-                    { label: 'My Profile',  action: () => { navigate('/profile'); setIsDropdownOpen(false); } },
-                    { label: 'Dashboard',   action: () => { handleLogoClick(); setIsDropdownOpen(false); } },
-                  ].map(({ label, action }) => (
+                    { label: 'My Profile', icon: User,            action: () => { navigate('/profile');    setIsDropdownOpen(false); } },
+                    { label: 'Dashboard',  icon: LayoutDashboard, action: () => { handleLogoClick();       setIsDropdownOpen(false); } },
+                  ].map(({ label, icon: Icon, action }) => (
                     <button key={label} onClick={action} style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      {label}
+                      <Icon size={13} style={{ opacity: 0.6 }} /> {label}
                     </button>
                   ))}
 
-                  <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }} />
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0' }} />
 
                   <button
                     onClick={handleLogout}
-                    style={{ ...dropdownItemStyle, color: '#ef4444' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#fff1f0'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    style={{ ...dropdownItemStyle, color: '#fca5a5' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    Sign out
+                    <LogOut size={13} style={{ opacity: 0.7 }} /> Sign out
                   </button>
                 </motion.div>
               )}
@@ -190,128 +182,107 @@ const Header = () => {
   );
 };
 
-/* ---- Styles ---- */
+/* ── Styles ── */
 const headerStyle = {
-  display:         'flex',
-  alignItems:      'center',
-  justifyContent:  'space-between',
-  padding:         '0 24px',
-  height:          '64px',
-  backgroundColor: '#ffffff',
-  borderBottom:    '1px solid #e2e8f0',
-  boxShadow:       '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-  position:        'sticky',
-  top:             0,
-  zIndex:          1000,
+  display:              'flex',
+  alignItems:           'center',
+  justifyContent:       'space-between',
+  padding:              '0 24px',
+  height:               '64px',
+  background:           'rgba(10,15,26,0.92)',
+  backdropFilter:       'blur(24px)',
+  WebkitBackdropFilter: 'blur(24px)',
+  borderBottom:         '1px solid rgba(255,255,255,0.18)',
+  boxShadow:            '0 4px 24px rgba(0,0,0,0.3)',
+  position:             'sticky',
+  top:                  0,
+  zIndex:               1000,
 };
 
 const logoContainerStyle = {
   display:    'flex',
   alignItems: 'center',
-  gap:        '10px',
+  gap:        10,
   cursor:     'pointer',
   flexShrink: 0,
   userSelect: 'none',
 };
 
+const logoWrapStyle = {
+  width:        48,
+  height:       48,
+  borderRadius: '50%',
+  padding:      2,
+  background:   'rgba(148,163,184,0.18)',
+  border:       '1px solid rgba(255,255,255,0.22)',
+  boxShadow:    '0 0 16px rgba(226,232,240,0.15)',
+  flexShrink:   0,
+};
+
 const logoImgStyle = {
-  width:        '48px',
-  height:       '48px',
+  width:        '100%',
+  height:       '100%',
   objectFit:    'cover',
   borderRadius: '50%',
-  border:       '2px solid #e2e8f0',
-  boxShadow:    '0 2px 6px rgb(0 0 0 / 0.12)',
+  display:      'block',
 };
 
 const titleStyle = {
   flex:         1,
   textAlign:    'center',
-  fontSize:     '14px',
-  fontWeight:   600,
-  color:        '#475569',
-  letterSpacing:'-0.01em',
+  fontSize:     13,
+  fontWeight:   500,
+  color:        'rgba(255,255,255,0.35)',
+  letterSpacing: '0.01em',
   margin:       '0 24px',
   whiteSpace:   'nowrap',
   overflow:     'hidden',
   textOverflow: 'ellipsis',
 };
 
-const avatarBtnStyle = {
-  background: 'none',
-  border:     'none',
-  padding:    '2px',
-  cursor:     'pointer',
-  borderRadius:'50%',
-  display:    'flex',
-  alignItems: 'center',
-  justifyContent:'center',
-};
-
-const ringWrapStyle = {
-  width:        '40px',
-  height:       '40px',
-  borderRadius: '50%',
-  padding:      '2px',
-  display:      'flex',
-  alignItems:   'center',
-  justifyContent:'center',
-};
-
-const ringInnerStyle = {
-  width:           '34px',
-  height:          '34px',
-  borderRadius:    '50%',
-  backgroundColor: '#ffffff',
-  overflow:        'hidden',
-  display:         'flex',
-  alignItems:      'center',
-  justifyContent:  'center',
-};
-
-const avatarFallbackStyle = {
-  width:           '100%',
-  height:          '100%',
-  borderRadius:    '50%',
-  background:      'linear-gradient(135deg, #6366f1, #8b5cf6)',
-  color:           '#fff',
-  display:         'flex',
-  alignItems:      'center',
-  justifyContent:  'center',
-  fontWeight:      700,
-  fontSize:        '14px',
+const signInBtnStyle = {
+  padding:       '8px 20px',
+  borderRadius:  10,
+  border:        '1px solid rgba(255,255,255,0.28)',
+  background:    'rgba(148,163,184,0.12)',
+  cursor:        'pointer',
+  fontSize:      13,
+  fontWeight:    700,
+  color:         '#fff',
+  transition:    'all 160ms ease',
+  letterSpacing: '0.02em',
 };
 
 const dropdownStyle = {
-  position:        'absolute',
-  top:             'calc(100% + 10px)',
-  right:           0,
-  backgroundColor: '#ffffff',
-  border:          '1px solid #e2e8f0',
-  borderRadius:    '12px',
-  boxShadow:       '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
-  minWidth:        '220px',
-  zIndex:          1001,
-  overflow:        'hidden',
-  transformOrigin: 'top right',
-};
-
-const dropdownHeaderStyle = {
-  padding: '14px 16px 10px',
+  position:             'absolute',
+  top:                  'calc(100% + 10px)',
+  right:                0,
+  background:           'rgba(10,15,26,0.97)',
+  backdropFilter:       'blur(24px)',
+  WebkitBackdropFilter: 'blur(24px)',
+  border:               '1px solid rgba(255,255,255,0.18)',
+  borderRadius:         14,
+  boxShadow:            '0 20px 40px rgba(0,0,0,0.5)',
+  minWidth:             230,
+  zIndex:               1001,
+  overflow:             'hidden',
+  transformOrigin:      'top right',
 };
 
 const dropdownItemStyle = {
-  display:    'block',
-  width:      '100%',
-  padding:    '9px 16px',
-  border:     'none',
-  background: 'transparent',
-  textAlign:  'left',
-  cursor:     'pointer',
-  fontSize:   '14px',
-  color:      '#0f172a',
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: 400,
-  transition: 'background 100ms ease',
+  display:     'flex',
+  alignItems:  'center',
+  gap:         9,
+  width:       '100%',
+  padding:     '10px 18px',
+  border:      'none',
+  background:  'transparent',
+  textAlign:   'left',
+  cursor:      'pointer',
+  fontSize:    13,
+  color:       'rgba(255,255,255,0.75)',
+  fontWeight:  500,
+  transition:  'background 120ms ease',
 };
 
 export default Header;

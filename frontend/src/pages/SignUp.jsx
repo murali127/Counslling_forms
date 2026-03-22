@@ -5,6 +5,15 @@ import { FaUserGraduate } from 'react-icons/fa';
 import apiClient from '../apiClient';
 import gvplog from '../images/gvplogo.jpg';
 
+/* ── Demo accounts for presentation — update credentials here ── */
+const DEMO_ACCOUNTS = [
+  { role: 'Student',   email: '322103311040@gvpce.ac.in', password: '04e64929a342e02d', color: '#7c3aed' },
+  { role: 'Faculty',   email: 'muralijay320@gmail.com',   password: 'yxVC9@EPnBpfj9g', color: '#047857' },
+  { role: 'HOD',       email: 'muralijay340@gmail.com',   password: 'ac0b84b7d03b4c57', color: '#e11d48' },
+  { role: 'Principal', email: 'majjiteja000@gmail.com',   password: 'principal123',     color: '#0e7490' },
+  { role: 'Master',    email: 'master@gmail.com',         password: 'master@123',       color: '#b45309' },
+];
+
 const Auth = () => {
   const navigate = useNavigate();
   const formRef = useRef(null);
@@ -13,6 +22,7 @@ const Auth = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [activeDemo, setActiveDemo] = useState(null);
   const [currentImage, setCurrentImage] = useState(0);
 
   const images = [
@@ -32,6 +42,24 @@ const Auth = () => {
   useEffect(() => {
     formRef.current?.querySelectorAll('input')[0]?.focus();
   }, [isSignUp]);
+
+  const autoLogin = async (email, password) => {
+    try {
+      setLoading(true);
+      setError('');
+      const { data } = await apiClient.post('/api/auth/signin', { email, password });
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userName', data.username);
+      const map = { user: '/user-panel', mentor: '/user-panel', admin: '/admin-panel', superadmin: '/superadmin-panel', principal: '/principal-panel', master: '/master-panel' };
+      navigate(map[data.role] || '/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Login failed. Check credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -124,8 +152,8 @@ const Auth = () => {
           {/* Header */}
           <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-              <FaUserGraduate size={20} color="#6366f1" />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#6366f1' }}>GVP-IT Portal</span>
+              <FaUserGraduate size={20} color="#6d28d9" />
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#6d28d9' }}>GVP-IT Portal</span>
             </div>
             <AnimatePresence mode="wait">
               <motion.div
@@ -158,6 +186,60 @@ const Auth = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Demo accounts — only on sign-in */}
+          {!isSignUp && (
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                Demo Accounts
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {DEMO_ACCOUNTS.map(({ role, email, password, color }) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => {
+                      setActiveDemo(role);
+                      autoLogin(email, password);
+                    }}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 99,
+                      border: `1px solid ${activeDemo === role ? color : '#e2e8f0'}`,
+                      background: activeDemo === role ? `${color}18` : '#f8fafc',
+                      color: activeDemo === role ? color : '#475569',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 140ms ease',
+                      fontFamily: 'inherit',
+                    }}
+                    onMouseEnter={e => {
+                      if (activeDemo !== role) {
+                        e.currentTarget.style.borderColor = color;
+                        e.currentTarget.style.color = color;
+                        e.currentTarget.style.background = `${color}10`;
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (activeDemo !== role) {
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.color = '#475569';
+                        e.currentTarget.style.background = '#f8fafc';
+                      }
+                    }}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+              {activeDemo && (
+                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+                  Credentials loaded for <span style={{ fontWeight: 600, color: DEMO_ACCOUNTS.find(d => d.role === activeDemo)?.color }}>{activeDemo}</span> — click Sign in
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Form */}
           <AnimatePresence mode="wait">
@@ -231,7 +313,7 @@ const Auth = () => {
               )}
               {!isSignUp && (
                 <div style={{ textAlign: 'right', marginTop: '-4px' }}>
-                  <Link to="/forgot-password" style={{ fontSize: '13px', color: '#6366f1', textDecoration: 'none', fontWeight: 500 }}>
+                  <Link to="/forgot-password" style={{ fontSize: '13px', color: '#6d28d9', textDecoration: 'none', fontWeight: 500 }}>
                     Forgot password?
                   </Link>
                 </div>
@@ -256,8 +338,8 @@ const Auth = () => {
           <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#475569' }}>
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
-              onClick={() => { setIsSignUp((v) => !v); setError(''); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', fontWeight: 600, fontSize: '14px', padding: 0, fontFamily: 'inherit' }}
+              onClick={() => { setIsSignUp((v) => !v); setError(''); setActiveDemo(null); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6d28d9', fontWeight: 600, fontSize: '14px', padding: 0, fontFamily: 'inherit' }}
             >
               {isSignUp ? 'Sign in' : 'Create one'}
             </button>

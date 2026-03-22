@@ -1,12 +1,31 @@
 /* ============================================================
-   Profile Page — GVP-IT Student Portal
+   Profile Page — GVP-IT Student Portal  (Pearl Frost dark theme)
    ============================================================ */
+
+/* Override all CSS variables for the profile page to Pearl Frost dark */
+.profile-container,
+.profile-container * {
+  --color-bg:              rgba(10,15,26,1);
+  --color-surface:         rgba(148,163,184,0.10);
+  --color-surface-raised:  rgba(148,163,184,0.16);
+  --color-border:          rgba(255,255,255,0.18);
+  --color-border-strong:   rgba(255,255,255,0.28);
+  --color-border-focus:    #818cf8;
+  --color-text-primary:    rgba(255,255,255,0.92);
+  --color-text-secondary:  rgba(255,255,255,0.60);
+  --color-text-muted:      rgba(255,255,255,0.38);
+  --color-primary:         #818cf8;
+  --color-primary-hover:   #a78bfa;
+  --color-primary-light:   rgba(129,140,248,0.15);
+  --color-success-light:   rgba(16,185,129,0.15);
+  --color-danger-light:    rgba(239,68,68,0.15);
+}
 
 .profile-container {
   max-width: 1100px;
   margin: 0 auto;
   padding: 32px 24px;
-  background: var(--color-bg);
+  background: rgba(10,15,26,1);
   min-height: calc(100vh - 64px);
 }
 
@@ -71,14 +90,14 @@
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #eef2ff, #c7d2fe);
+  background: rgba(148,163,184,0.20);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30px;
   font-weight: 700;
-  color: var(--color-primary);
-  border: 3px solid var(--color-border);
+  color: rgba(255,255,255,0.85);
+  border: 3px solid rgba(255,255,255,0.18);
 }
 
 .upload-btn {
@@ -231,35 +250,44 @@
 .form-group textarea {
   width: 100%;
   padding: 9px 12px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(71,85,105,0.25) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-family: var(--font-family);
-  color: var(--color-text-primary);
+  color: rgba(255,255,255,0.92) !important;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   line-height: 1.5;
+  -webkit-text-fill-color: rgba(255,255,255,0.92);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgb(99 102 241 / 0.12);
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
+}
+
+.form-group select option {
+  background: #1e293b;
+  color: rgba(255,255,255,0.92);
 }
 
 .form-group input:disabled,
 .form-group select:disabled,
 .form-group textarea:disabled {
-  background: var(--color-surface-raised);
-  color: var(--color-text-muted);
+  background: rgba(71,85,105,0.15) !important;
+  color: rgba(255,255,255,0.35) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.35);
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: var(--color-text-muted);
+  color: rgba(255,255,255,0.35) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.35);
 }
 
 /* ── Buttons ── */

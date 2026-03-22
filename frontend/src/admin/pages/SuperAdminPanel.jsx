@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users, GraduationCap, Link2, BarChart3, FileText, Star, Layers, CalendarRange } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert, CircularProgress, Typography } from '@mui/material';
 import apiClient from '../../apiClient';
 import PanelLayout from '../components/PanelLayout';
@@ -8,19 +9,21 @@ import StudentsList from '../components/StudentsList';
 import MentorAllocation from '../components/MentorAllocation';
 import OverallReports from '../components/OverallReports';
 
-/* Inline section wrapper — shows a back button then the section component */
 const SectionShell = ({ onBack, children }) => (
-  <div>
+  <div className="glass-section">
     <button
       onClick={onBack}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
-        marginBottom: 16, padding: '6px 14px', borderRadius: 8,
-        border: '1px solid #e2e8f0', background: '#fff',
-        cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: '#475569',
+        marginBottom: 16, padding: '8px 16px', borderRadius: 10,
+        border: '1px solid rgba(255,255,255,0.15)',
+        background: 'rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(12px)',
+        cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.8)',
+        transition: 'all 150ms ease',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-      onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
     >
       ← Overview
     </button>
@@ -112,14 +115,14 @@ const SuperAdminPanel = () => {
   };
 
   const CARDS = [
-    { icon: '👥', title: 'Manage Faculty',      desc: 'Create and manage faculty accounts in your department',  onClick: () => setActiveSection('admins'),      color: '#ec4899' },
-    { icon: '🎓', title: 'Student Records',      desc: 'View and manage all student records department-wide',    onClick: () => setActiveSection('students'),    color: '#6366f1' },
-    { icon: '🔗', title: 'Mentor Allocation',    desc: 'Assign students to mentors within the department',       onClick: () => setActiveSection('allocation'),  color: '#8b5cf6' },
-    { icon: '📊', title: 'Overall Reports',      desc: 'View department-wide analytics and counselling reports', onClick: () => setActiveSection('reports'),     color: '#06b6d4' },
-    { icon: '📄', title: 'Counselling Forms',    desc: 'Access counselling forms for all assigned students',     onClick: () => navigate('/counseling-forms'),   color: '#10b981' },
-    { icon: '⭐', title: 'Mentor Grading',       desc: 'View mentor grading records across the department',      onClick: () => navigate('/mentorgrade'),        color: '#f59e0b' },
-    { icon: '🗂️', title: 'All Batches',          desc: 'Year-wise student list with counselling form access',    onClick: () => navigate('/all-batches'),        color: '#0ea5e9' },
-    { icon: '📅', title: 'Shift Academic Year',  desc: 'Promote all students to next year of study',             onClick: () => setModalOpen(true),             color: '#ef4444' },
+    { icon: Users,         title: 'Manage Faculty',     desc: 'Create and manage faculty accounts in your department',  onClick: () => setActiveSection('admins'),     color: '#6366f1' },
+    { icon: GraduationCap, title: 'Student Records',    desc: 'View and manage all student records department-wide',    onClick: () => setActiveSection('students'),   color: '#8b5cf6' },
+    { icon: Link2,         title: 'Mentor Allocation',  desc: 'Assign students to mentors within the department',       onClick: () => setActiveSection('allocation'), color: '#a78bfa' },
+    { icon: BarChart3,     title: 'Overall Reports',    desc: 'View department-wide analytics and counselling reports', onClick: () => setActiveSection('reports'),    color: '#60a5fa' },
+    { icon: FileText,      title: 'Counselling Forms',  desc: 'Access counselling forms for all assigned students',     onClick: () => navigate('/counseling-forms'),  color: '#818cf8' },
+    { icon: Star,          title: 'Mentor Grading',     desc: 'View mentor grading records across the department',      onClick: () => navigate('/mentorgrade'),       color: '#c084fc' },
+    { icon: Layers,        title: 'All Batches',        desc: 'Year-wise student list with counselling form access',    onClick: () => navigate('/all-batches'),       color: '#38bdf8' },
+    { icon: CalendarRange, title: 'Shift Academic Year',desc: 'Promote all students to next year of study',             onClick: () => setModalOpen(true),            color: '#f472b6' },
   ];
 
   const sectionMap = {
@@ -158,10 +161,10 @@ const SuperAdminPanel = () => {
     <>
       <PanelLayout
         roleLabel="HOD Panel"
-        roleColor="#ec4899"
+        roleColor="#e11d48"
         info={info}
         stats={[
-          { label: 'Role',       value: 'HOD',          color: '#ec4899' },
+          { label: 'Role',       value: 'HOD',          color: '#e11d48' },
           { label: 'Department', value: info.dept || 'N/A' },
           { label: 'Status',     value: 'Active',       color: '#10b981' },
         ]}

@@ -102,7 +102,7 @@ const AdminDashboard = () => {
       </Typography>
       
       {/* Admin Info Card */}
-      <Paper sx={{ padding: '20px', marginBottom: '30px', backgroundColor: '#f5f5f5' }}>
+      <Paper sx={{ padding: '20px', marginBottom: '30px', backgroundColor: 'rgba(71,85,105,0.18)' }}>
         <Typography variant="h6" gutterBottom>
           Your Information
         </Typography>
@@ -129,14 +129,14 @@ const AdminDashboard = () => {
             <>
               <Box>
                 <Typography variant="body2" color="textSecondary">Your Superadmin</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#818cf8' }}>
                   {adminInfo.superadminName}
                 </Typography>
               </Box>
               
               <Box>
                 <Typography variant="body2" color="textSecondary">Superadmin Email</Typography>
-                <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#666' }}>
+                <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'rgba(255,255,255,0.55)' }}>
                   {adminInfo.superadminEmail}
                 </Typography>
               </Box>
