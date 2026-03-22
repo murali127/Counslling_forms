@@ -8,7 +8,7 @@ const G = {
   title:   { fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.92)', marginBottom: 14, letterSpacing: '-0.01em' },
   label:   { fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.55)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' },
   input:   { background: 'rgba(71,85,105,0.30)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', width: '100%', fontFamily: 'inherit' },
-  select:  { background: 'rgba(71,85,105,0.35)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' },
+  select:  { background: 'rgba(71,85,105,0.35)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit', colorScheme: 'dark' },
   error:   { background: 'rgba(185,28,28,0.15)', color: '#fca5a5', border: '1px solid rgba(248,113,113,0.20)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13 },
   success: { background: 'rgba(16,185,129,0.12)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.20)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13 },
   th:      { background: 'rgba(71,85,105,0.22)', color: 'rgba(255,255,255,0.65)', fontWeight: 600, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.10)', textAlign: 'left' },

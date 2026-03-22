@@ -1,430 +1,353 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Alert,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow
-} from '@mui/material';
 import apiClient from '../apiClient';
 
-const ODD_MONTHS = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
+const ODD_MONTHS  = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
 const EVEN_MONTHS = ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
+const SEMESTERS   = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const monthsForSemester = (sem) => (Number(sem) % 2 === 1 ? ODD_MONTHS : EVEN_MONTHS);
 
-const getSemEntry = (attendance, semNumber) => {
-  const semKey = String(semNumber);
-  return (attendance || []).find((entry) => String(entry.semester) === semKey);
-};
+const getSemEntry = (attendance, semNumber) =>
+  (attendance || []).find((e) => String(e.semester) === String(semNumber));
 
-const getMonthPercentage = (semEntry, month) => {
-  if (!semEntry || !semEntry.months) return '';
-  const monthObj = semEntry.months[month];
-  if (!monthObj || monthObj.percentage === undefined || monthObj.percentage === null) return '';
-  return monthObj.percentage;
+const getMonthPct = (semEntry, month) => {
+  if (!semEntry?.months) return '';
+  const v = semEntry.months[month];
+  return (v?.percentage === undefined || v?.percentage === null) ? '' : v.percentage;
 };
 
 const semAverage = (semEntry) => {
-  if (!semEntry || !semEntry.months) return '';
-  const values = Object.values(semEntry.months)
+  if (!semEntry?.months) return '';
+  const vals = Object.values(semEntry.months)
     .map((v) => Number(v?.percentage))
     .filter((v) => !Number.isNaN(v));
-  if (values.length === 0) return '';
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  return avg.toFixed(1);
+  if (!vals.length) return '';
+  return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
 };
 
-const buildDraftFromAttendance = (attendance = []) => {
-  const draft = {};
+const buildDraft = (attendance = []) => {
+  const d = {};
   for (const sem of SEMESTERS) {
-    const semKey = String(sem);
-    const semEntry = getSemEntry(attendance, sem);
-    draft[semKey] = {};
-    for (const month of monthsForSemester(sem)) {
-      draft[semKey][month] = getMonthPercentage(semEntry, month);
-    }
+    d[String(sem)] = {};
+    for (const m of monthsForSemester(sem))
+      d[String(sem)][m] = getMonthPct(getSemEntry(attendance, sem), m);
   }
-  return draft;
+  return d;
 };
 
+/* ─── Styles ─────────────────────────────────── */
+const G = {
+  wrap:   { padding: '32px 28px', maxWidth: 1100, margin: '0 auto' },
+  card:   { background: 'rgba(148,163,184,0.10)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 14, padding: '20px 22px', marginBottom: 18 },
+  h1:     { fontSize: 26, fontWeight: 800, color: 'rgba(255,255,255,0.95)', marginBottom: 6, letterSpacing: '-0.02em' },
+  h2:     { fontSize: 14, fontWeight: 700, color: 'rgba(255,255,255,0.85)', marginBottom: 14, letterSpacing: '-0.01em' },
+  sub:    { fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.40)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 },
+  th:     { background: 'rgba(71,85,105,0.30)', color: 'rgba(255,255,255,0.55)', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', textAlign: 'left' },
+  td:     { borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.85)', padding: '10px 14px', fontSize: 13 },
+  tdSem:  { borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.92)', padding: '10px 14px', fontSize: 13, fontWeight: 700, minWidth: 110 },
+  tdAvg:  { borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', fontSize: 13, fontWeight: 700 },
+  input:  { width: 72, background: 'rgba(71,85,105,0.30)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 7, padding: '6px 8px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', textAlign: 'center', fontFamily: 'inherit' },
+  btnPrimary: { padding: '8px 18px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'opacity 0.15s' },
+  btnOutline: { padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+  btnSave:    { padding: '5px 12px', borderRadius: 7, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 },
+  btnEdit:    { padding: '8px 18px', borderRadius: 8, border: '1px solid rgba(99,102,241,0.40)', background: 'rgba(99,102,241,0.12)', color: '#a5b4fc', cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+  select: { background: 'rgba(71,85,105,0.30)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit', width: '100%', maxWidth: 420 },
+  alert:  (type) => ({ padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: 13, background: type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)', border: `1px solid ${type === 'error' ? 'rgba(239,68,68,0.30)' : 'rgba(16,185,129,0.30)'}`, color: type === 'error' ? '#fca5a5' : '#6ee7b7' }),
+};
+
+const avgColor = (avg) => {
+  if (avg === '') return 'rgba(255,255,255,0.40)';
+  const n = Number(avg);
+  if (n >= 75) return '#4ade80';
+  if (n >= 60) return '#facc15';
+  return '#f87171';
+};
+
+/* ─── Component ──────────────────────────────── */
 const Attendance = () => {
   const navigate = useNavigate();
   const { email: emailParam } = useParams();
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const [role, setRole] = useState('user');
-  const [students, setStudents] = useState([]);
-  const [selectedEmail, setSelectedEmail] = useState(emailParam || '');
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [attendanceDraft, setAttendanceDraft] = useState({});
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [error,          setError]          = useState('');
+  const [success,        setSuccess]        = useState('');
+  const [role,           setRole]           = useState('user');
+  const [selfId,         setSelfId]         = useState(''); // kept for potential future use
+  const [students,       setStudents]       = useState([]);
+  const [selectedEmail,  setSelectedEmail]  = useState(emailParam || '');
+  const [selectedStudent,setSelectedStudent]= useState(null);
+  const [profile,        setProfile]        = useState(null);
+  const [attendanceDraft,setAttendanceDraft]= useState({});
+  const [editMode,       setEditMode]       = useState(false);
 
   const isManager = ['admin', 'superadmin', 'principal', 'master'].includes(role);
+  const canEdit   = isManager || role === 'user';
 
   const fetchProfileForStudent = async (student) => {
-    if (!student?.username) return;
     const token = localStorage.getItem('authToken');
     const res = await apiClient.get(`/api/profile/${student.username}`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
-    const nextProfile = res.data?.profile || null;
-    setProfile(nextProfile);
-    setAttendanceDraft(buildDraftFromAttendance(nextProfile?.attendance || []));
-  };
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        navigate('/signup');
-        return;
-      }
-
-      const userRes = await apiClient.get('/api/auth/user', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const currentRole = userRes.data?.role || 'user';
-      setRole(currentRole);
-
-      if (['admin', 'superadmin', 'principal', 'master'].includes(currentRole)) {
-        const studentsRes = await apiClient.get('/api/admin/users?role=user', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const list = studentsRes.data || [];
-        setStudents(list);
-
-        let target = null;
-        if (emailParam) {
-          target = list.find((s) => String(s.email).toLowerCase() === String(emailParam).toLowerCase()) || null;
-          setSelectedEmail(emailParam);
-        }
-        if (!target && list.length > 0) {
-          target = list[0];
-          setSelectedEmail(list[0].email);
-        }
-        setSelectedStudent(target);
-
-        if (target) {
-          await fetchProfileForStudent(target);
-        } else {
-          setProfile(null);
-        }
-      } else {
-        const selfProfile = await apiClient.get('/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const nextProfile = selfProfile.data?.profile || null;
-        setProfile(nextProfile);
-        setAttendanceDraft(buildDraftFromAttendance(nextProfile?.attendance || []));
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load attendance data');
-    } finally {
-      setLoading(false);
-    }
+    const p = res.data?.profile || null;
+    setProfile(p);
+    setAttendanceDraft(buildDraft(p?.attendance || []));
   };
 
   useEffect(() => {
-    loadData();
+    (async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('authToken');
+        if (!token) { navigate('/signup'); return; }
+
+        const userRes = await apiClient.get('/api/auth/user', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const currentRole = userRes.data?.role || 'user';
+        setRole(currentRole);
+        setSelfId(userRes.data?._id || '');
+
+        if (['admin', 'superadmin', 'principal', 'master'].includes(currentRole)) {
+          const studentsRes = await apiClient.get('/api/admin/users?role=user', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const list = studentsRes.data || [];
+          setStudents(list);
+          let target = emailParam
+            ? list.find((s) => s.email.toLowerCase() === emailParam.toLowerCase())
+            : list[0] || null;
+          if (!target && list.length) target = list[0];
+          setSelectedEmail(target?.email || '');
+          setSelectedStudent(target);
+          if (target) await fetchProfileForStudent(target);
+        } else {
+          const selfProfile = await apiClient.get('/api/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const p = selfProfile.data?.profile || null;
+          setProfile(p);
+          setAttendanceDraft(buildDraft(p?.attendance || []));
+        }
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to load attendance');
+      } finally {
+        setLoading(false);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emailParam]);
 
-  const handleStudentChange = async (nextEmail) => {
-    setSelectedEmail(nextEmail);
-    setError('');
-    setSuccess('');
-    const nextStudent = students.find((s) => s.email === nextEmail) || null;
-    setSelectedStudent(nextStudent);
-    if (nextStudent) {
-      try {
-        await fetchProfileForStudent(nextStudent);
-      } catch (err) {
-        setProfile(null);
-        setError(err.response?.data?.error || 'Failed to load selected student profile');
-      }
-    } else {
-      setProfile(null);
-    }
+  const handleStudentChange = async (email) => {
+    setSelectedEmail(email);
+    setError(''); setSuccess('');
+    const next = students.find((s) => s.email === email) || null;
+    setSelectedStudent(next);
+    if (next) {
+      try { await fetchProfileForStudent(next); }
+      catch (err) { setProfile(null); setError('Failed to load student profile'); }
+    } else setProfile(null);
   };
 
   const handleDraftChange = (sem, month, value) => {
-    const semKey = String(sem);
     setAttendanceDraft((prev) => ({
       ...prev,
-      [semKey]: {
-        ...(prev[semKey] || {}),
-        [month]: value
-      }
+      [String(sem)]: { ...(prev[String(sem)] || {}), [month]: value },
     }));
   };
 
   const handleSaveSemester = async (sem) => {
-    if (!selectedStudent?._id) {
-      setError('Please select a student');
-      return;
-    }
-
     try {
-      setSaving(true);
-      setError('');
-      setSuccess('');
-      const token = localStorage.getItem('authToken');
+      setSaving(true); setError(''); setSuccess('');
+      const token   = localStorage.getItem('authToken');
+      const semKey  = String(sem);
+      const updates = monthsForSemester(sem)
+        .map((m) => ({ month: m, raw: attendanceDraft?.[semKey]?.[m] }))
+        .filter((x) => x.raw !== '' && x.raw !== null && x.raw !== undefined);
 
-      const semKey = String(sem);
-      const targetMonths = monthsForSemester(sem);
-      const updates = targetMonths
-        .map((month) => ({ month, raw: attendanceDraft?.[semKey]?.[month] }))
-        .filter((item) => item.raw !== '' && item.raw !== null && item.raw !== undefined);
-
-      if (updates.length === 0) {
-        setError('Please enter at least one month value before saving this semester.');
-        return;
-      }
+      if (!updates.length) { setError('Enter at least one value before saving.'); return; }
 
       for (const item of updates) {
         const value = Number(item.raw);
         if (Number.isNaN(value) || value < 0 || value > 100) {
-          setError(`Invalid percentage for ${item.month}. Please enter value between 0 and 100.`);
-          return;
+          setError(`${item.month}: value must be 0–100`); return;
         }
-
-        await apiClient.patch('/api/profile/attendance', {
-          userId: selectedStudent._id,
-          semester: semKey,
-          month: item.month,
-          percentage: value
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        if (isManager) {
+          await apiClient.patch('/api/profile/attendance', {
+            userId: selectedStudent._id, semester: semKey, month: item.month, percentage: value,
+          }, { headers: { Authorization: `Bearer ${token}` } });
+        } else {
+          await apiClient.patch('/api/profile/attendance/self', {
+            semester: semKey, month: item.month, percentage: value,
+          }, { headers: { Authorization: `Bearer ${token}` } });
+        }
       }
 
-      await fetchProfileForStudent(selectedStudent);
-      setSuccess(`Semester ${semKey} attendance updated successfully`);
+      if (isManager) await fetchProfileForStudent(selectedStudent);
+      else {
+        const refreshed = await apiClient.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } });
+        const p = refreshed.data?.profile || null;
+        setProfile(p);
+        setAttendanceDraft(buildDraft(p?.attendance || []));
+      }
+      setSuccess(`Semester ${sem} saved successfully`);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update attendance');
+      setError(err.response?.data?.error || 'Failed to save');
     } finally {
       setSaving(false);
     }
   };
 
   const semesterRows = useMemo(() => {
-    const attendance = profile?.attendance || [];
+    const att = profile?.attendance || [];
     return SEMESTERS.map((sem) => {
-      const semEntry = getSemEntry(attendance, sem);
+      const entry  = getSemEntry(att, sem);
       const months = monthsForSemester(sem);
-      return {
-        sem,
-        months,
-        values: months.map((m) => getMonthPercentage(semEntry, m)),
-        avg: semAverage(semEntry)
-      };
+      return { sem, months, values: months.map((m) => getMonthPct(entry, m)), avg: semAverage(entry) };
     });
   }, [profile]);
 
-  const oddRows = semesterRows.filter((r) => Number(r.sem) % 2 === 1);
-  const evenRows = semesterRows.filter((r) => Number(r.sem) % 2 === 0);
+  const oddRows  = semesterRows.filter((r) => r.sem % 2 === 1);
+  const evenRows = semesterRows.filter((r) => r.sem % 2 === 0);
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  /* ── Render ── */
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+      <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#818cf8', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  );
+
+  const renderTable = (rows, months, groupLabel) => (
+    <div style={{ marginBottom: 28 }}>
+      <div style={G.sub}>{groupLabel}</div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={G.th}>Semester</th>
+              {months.map((m) => <th key={m} style={G.th}>{m}</th>)}
+              {editMode && canEdit && <th style={G.th}>Save</th>}
+              <th style={G.th}>Average</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.sem}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(148,163,184,0.06)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <td style={G.tdSem}>Semester {row.sem}</td>
+                {row.months.map((m, idx) => (
+                  <td key={m} style={G.td}>
+                    {editMode && canEdit ? (
+                      <input
+                        type="number"
+                        min={0} max={100}
+                        value={attendanceDraft?.[String(row.sem)]?.[m] ?? ''}
+                        onChange={(e) => handleDraftChange(row.sem, m, e.target.value)}
+                        placeholder="—"
+                        style={G.input}
+                      />
+                    ) : (
+                      row.values[idx] === '' ? (
+                        <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span>
+                      ) : (
+                        <span style={{ color: avgColor(row.values[idx]) }}>{row.values[idx]}%</span>
+                      )
+                    )}
+                  </td>
+                ))}
+                {editMode && canEdit && (
+                  <td style={G.td}>
+                    <button
+                      onClick={() => handleSaveSemester(row.sem)}
+                      disabled={saving}
+                      style={{ ...G.btnSave, opacity: saving ? 0.6 : 1 }}
+                    >
+                      Save
+                    </button>
+                  </td>
+                )}
+                <td style={{ ...G.tdAvg, color: avgColor(row.avg) }}>
+                  {row.avg === '' ? <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span> : `${row.avg}%`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   return (
-    <Box sx={{ p: 3, maxWidth: '1200px', margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        Attendance Record
-      </Typography>
+    <div style={G.wrap}>
+      {/* Header */}
+      <div style={{ marginBottom: 22 }}>
+        <div style={G.h1}>Attendance Record</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+          <button onClick={() => navigate(isManager ? '/admin/data' : '/dashboard')} style={G.btnOutline}>
+            ← Back to Dashboard
+          </button>
+          {canEdit && (
+            <button
+              onClick={() => { setEditMode((p) => !p); setError(''); setSuccess(''); }}
+              style={editMode
+                ? { ...G.btnPrimary }
+                : { ...G.btnEdit }
+              }
+            >
+              {editMode ? '✓ Done Editing' : '✎ Edit Attendance'}
+            </button>
+          )}
+        </div>
+      </div>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-        <Button variant="outlined" onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
-        {isManager && <Button variant="outlined" onClick={() => navigate('/admin/data')}>Back to Data Overview</Button>}
-      </Box>
+      {error   && <div style={G.alert('error')}>{error}</div>}
+      {success && <div style={G.alert('success')}>{success}</div>}
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-
+      {/* Manager student selector */}
       {isManager && (
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Manage Student Attendance</Typography>
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 2 }}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Student</InputLabel>
-              <Select
-                value={selectedEmail}
-                label="Student"
-                onChange={(e) => handleStudentChange(e.target.value)}
-              >
-                {students.map((s) => (
-                  <MenuItem key={s._id} value={s.email}>{s.username} ({s.email})</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-            Odd Semesters (Jun to Nov)
-          </Typography>
-
-          <TableContainer sx={{ mb: 2 }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Semester</b></TableCell>
-                  {ODD_MONTHS.map((m) => <TableCell key={`odd-head-${m}`}><b>{m}</b></TableCell>)}
-                  <TableCell><b>Action</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {[1, 3, 5, 7].map((sem) => (
-                  <TableRow key={`odd-row-${sem}`}>
-                    <TableCell>{`Semester ${sem}`}</TableCell>
-                    {ODD_MONTHS.map((m) => (
-                      <TableCell key={`odd-${sem}-${m}`}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={attendanceDraft?.[String(sem)]?.[m] ?? ''}
-                          onChange={(e) => handleDraftChange(sem, m, e.target.value)}
-                          inputProps={{ min: 0, max: 100 }}
-                          sx={{ width: '90px' }}
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <Button variant="contained" size="small" disabled={saving} onClick={() => handleSaveSemester(sem)}>
-                        Save Sem {sem}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Typography variant="subtitle1" sx={{ mt: 1, mb: 1, fontWeight: 'bold' }}>
-            Even Semesters (Dec to May)
-          </Typography>
-
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Semester</b></TableCell>
-                  {EVEN_MONTHS.map((m) => <TableCell key={`even-head-${m}`}><b>{m}</b></TableCell>)}
-                  <TableCell><b>Action</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {[2, 4, 6, 8].map((sem) => (
-                  <TableRow key={`even-row-${sem}`}>
-                    <TableCell>{`Semester ${sem}`}</TableCell>
-                    {EVEN_MONTHS.map((m) => (
-                      <TableCell key={`even-${sem}-${m}`}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={attendanceDraft?.[String(sem)]?.[m] ?? ''}
-                          onChange={(e) => handleDraftChange(sem, m, e.target.value)}
-                          inputProps={{ min: 0, max: 100 }}
-                          sx={{ width: '90px' }}
-                        />
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <Button variant="contained" size="small" disabled={saving} onClick={() => handleSaveSemester(sem)}>
-                        Save Sem {sem}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+        <div style={{ ...G.card, marginBottom: 18 }}>
+          <div style={G.h2}>Select Student</div>
+          <select value={selectedEmail} onChange={(e) => handleStudentChange(e.target.value)} style={G.select}>
+            {students.map((s) => (
+              <option key={s._id} value={s.email}>{s.username} — {s.email}</option>
+            ))}
+          </select>
+        </div>
       )}
 
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Semester-wise Attendance View
-        </Typography>
+      {/* Attendance table */}
+      {!profile ? (
+        <div style={{ ...G.card, textAlign: 'center', color: 'rgba(255,255,255,0.30)', padding: '36px 20px' }}>
+          No attendance data found yet.{canEdit && !editMode && ' Click "Edit Attendance" to add your records.'}
+        </div>
+      ) : (
+        <div style={G.card}>
+          <div style={G.h2}>Semester-wise Attendance View</div>
+          {renderTable(oddRows,  ODD_MONTHS,  'Odd Semesters (Jun to Nov)')}
+          {renderTable(evenRows, EVEN_MONTHS, 'Even Semesters (Dec to May)')}
+        </div>
+      )}
 
-        {!profile ? (
-          <Alert severity="info">No profile found yet for this student.</Alert>
-        ) : (
-          <>
-          <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>Odd Semesters (Jun to Nov)</Typography>
-          <TableContainer sx={{ mb: 2 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Semester</b></TableCell>
-                  {ODD_MONTHS.map((m) => <TableCell key={`odd-view-${m}`}><b>{m}</b></TableCell>)}
-                  <TableCell><b>Average</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {oddRows.map((row) => (
-                  <TableRow key={`odd-view-row-${row.sem}`}>
-                    <TableCell><b>{`Semester ${row.sem}`}</b></TableCell>
-                    {row.values.map((v, idx) => <TableCell key={`odd-view-${row.sem}-${idx}`}>{v === '' ? '-' : `${v}%`}</TableCell>)}
-                    <TableCell>{row.avg === '' ? '-' : `${row.avg}%`}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+      {/* If no profile yet but in edit mode, still show the edit table */}
+      {!profile && editMode && canEdit && (
+        <div style={G.card}>
+          <div style={G.h2}>Add Attendance</div>
+          {renderTable(
+            SEMESTERS.filter(s => s % 2 === 1).map(sem => ({ sem, months: ODD_MONTHS, values: ODD_MONTHS.map(() => ''), avg: '' })),
+            ODD_MONTHS, 'Odd Semesters (Jun to Nov)'
+          )}
+          {renderTable(
+            SEMESTERS.filter(s => s % 2 === 0).map(sem => ({ sem, months: EVEN_MONTHS, values: EVEN_MONTHS.map(() => ''), avg: '' })),
+            EVEN_MONTHS, 'Even Semesters (Dec to May)'
+          )}
+        </div>
+      )}
 
-          <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>Even Semesters (Dec to May)</Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Semester</b></TableCell>
-                  {EVEN_MONTHS.map((m) => <TableCell key={`even-view-${m}`}><b>{m}</b></TableCell>)}
-                  <TableCell><b>Average</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {evenRows.map((row) => (
-                  <TableRow key={`even-view-row-${row.sem}`}>
-                    <TableCell><b>{`Semester ${row.sem}`}</b></TableCell>
-                    {row.values.map((v, idx) => <TableCell key={`even-view-${row.sem}-${idx}`}>{v === '' ? '-' : `${v}%`}</TableCell>)}
-                    <TableCell>{row.avg === '' ? '-' : `${row.avg}%`}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          </>
-        )}
-      </Paper>
-    </Box>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
 };
 

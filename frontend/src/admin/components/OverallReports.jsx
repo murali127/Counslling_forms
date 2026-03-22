@@ -14,7 +14,7 @@ const G = {
   btnSecondary: { padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(16,185,129,0.30)', background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', cursor: 'pointer', fontSize: 13, fontWeight: 600 },
   btnNav:   { padding: '6px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.70)', cursor: 'pointer', fontSize: 12.5 },
   btnOutline: { padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.75)', cursor: 'pointer', fontSize: 13, fontWeight: 600 },
-  select:   { background: 'rgba(71,85,105,0.35)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' },
+  select:   { background: 'rgba(71,85,105,0.35)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, padding: '8px 12px', color: 'rgba(255,255,255,0.92)', fontSize: 13, outline: 'none', cursor: 'pointer', fontFamily: 'inherit', colorScheme: 'dark' },
   pageInfo: { color: 'rgba(255,255,255,0.55)', fontSize: 13 },
   subLabel: { fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.65)', marginBottom: 4 },
   subItem:  { fontSize: 12, color: 'rgba(255,255,255,0.55)', marginLeft: 10, lineHeight: 1.8 },

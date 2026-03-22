@@ -225,6 +225,45 @@ router.patch("/", authMiddleware, async (req, res, next) => {
   }
 });
 /**
+ * @route PATCH /api/profile/attendance/self
+ * @desc Update own attendance (Student)
+ * @access Authenticated user (self)
+ */
+router.patch("/attendance/self", authMiddleware, async (req, res, next) => {
+  try {
+    const { semester, month, percentage } = req.body;
+
+    if (!semester || !month || percentage === undefined) {
+      return errorResponse(res, 400, "Missing required fields");
+    }
+    if (percentage < 0 || percentage > 100) {
+      return errorResponse(res, 400, "Percentage must be between 0 and 100");
+    }
+
+    const profile = await Profile.findOne({ userId: req.user.id });
+    if (!profile) {
+      return errorResponse(res, 404, "Profile not found");
+    }
+
+    profile.attendance = profile.attendance || [];
+    let semesterEntry = profile.attendance.find(s => s.semester === semester);
+    if (!semesterEntry) {
+      semesterEntry = { semester, months: {} };
+      profile.attendance.push(semesterEntry);
+    }
+    semesterEntry.months[month] = { percentage };
+    profile.adminOverride = true;
+    await profile.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Attendance updated successfully",
+      attendance: profile.attendance
+    });
+  } catch (err) { return next(err); }
+});
+
+/**
  * @route PATCH /api/profile/attendance
  * @desc Update attendance (Admin Only)
  * @access Admin

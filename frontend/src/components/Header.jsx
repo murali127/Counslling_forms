@@ -240,16 +240,16 @@ const logoImgStyle = {
 };
 
 const titleStyle = {
-  flex:         1,
-  textAlign:    'center',
-  fontSize:     13,
-  fontWeight:   500,
-  color:        'rgba(255,255,255,0.35)',
-  letterSpacing: '0.01em',
-  margin:       '0 24px',
-  whiteSpace:   'nowrap',
-  overflow:     'hidden',
-  textOverflow: 'ellipsis',
+  flex:          1,
+  textAlign:     'center',
+  fontSize:      16,
+  fontWeight:    700,
+  color:         'rgba(255,255,255,0.88)',
+  letterSpacing: '-0.01em',
+  margin:        '0 24px',
+  whiteSpace:    'nowrap',
+  overflow:      'hidden',
+  textOverflow:  'ellipsis',
 };
 
 const signInBtnStyle = {
