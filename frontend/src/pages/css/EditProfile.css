@@ -1,115 +1,140 @@
-/* General Styles */
+/* EditProfile — Pearl Frost dark theme */
 .edit-profile-container {
     font-family: 'Arial', sans-serif;
     max-width: 900px;
     margin: 20px auto;
     padding: 30px;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: rgba(148,163,184,0.10);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.30);
+    color: rgba(255,255,255,0.85);
   }
-  
+
   .edit-profile-header {
     text-align: center;
     margin-bottom: 20px;
   }
-  
+
   .edit-profile-header h1 {
     font-size: 32px;
-    color: #4C4C6C;
+    color: rgba(255,255,255,0.92);
     font-weight: bold;
     letter-spacing: 1px;
   }
-  
+
   .edit-profile-content {
     display: flex;
     justify-content: space-between;
     padding-top: 20px;
   }
-  
+
   .edit-profile-left {
     width: 30%;
     text-align: center;
   }
-  
+
   .edit-profile-picture img {
     width: 150px;
     height: 150px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid #f4f4f4;
+    border: 3px solid rgba(255,255,255,0.22);
   }
-  
+
   .edit-profile-picture .edit-btn {
     margin-top: 10px;
     padding: 8px 15px;
-    background-color: #2F80ED;
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
-    transition: background-color 0.3s;
+    transition: opacity 0.2s;
   }
-  
+
   .edit-profile-picture .edit-btn:hover {
-    background-color: #1A63B4;
+    opacity: 0.85;
   }
-  
+
   .edit-profile-right {
     width: 65%;
     padding-left: 30px;
   }
-  
+
   .form-group {
     margin-bottom: 20px;
   }
-  
+
   .form-group label {
     display: block;
-    font-size: 16px;
-    color: #555;
+    font-size: 14px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 5px;
+    font-weight: 500;
   }
-  
+
   .form-group input,
   .form-group textarea {
     width: 100%;
-    padding: 10px;
+    padding: 10px 12px;
     font-size: 14px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-top: 5px;
+    background: rgba(71,85,105,0.25) !important;
+    border: 1px solid rgba(255,255,255,0.18) !important;
+    border-radius: 8px;
+    margin-top: 2px;
+    color: rgba(255,255,255,0.90) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.90);
+    outline: none;
+    transition: border-color 0.15s;
   }
-  
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(255,255,255,0.32) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.32);
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 3px rgba(129,140,248,0.16);
+  }
+
   .save-btn {
     padding: 12px 20px;
-    background-color: #2F80ED;
+    background: linear-gradient(135deg, #4338ca, #6d28d9);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+    font-weight: 600;
+    transition: opacity 0.2s, transform 0.15s;
   }
-  
+
   .save-btn:hover {
-    background-color: #1A63B4;
+    opacity: 0.88;
+    transform: translateY(-1px);
   }
-  
+
   /* Responsive Design */
   @media (max-width: 768px) {
     .edit-profile-content {
       flex-direction: column;
       align-items: center;
     }
-  
+
     .edit-profile-left {
       margin-bottom: 20px;
       width: 100%;
     }
-  
+
     .edit-profile-right {
       width: 100%;
+      padding-left: 0;
     }
   }
-  

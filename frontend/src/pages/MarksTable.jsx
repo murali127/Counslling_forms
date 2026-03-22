@@ -304,10 +304,11 @@ const MarksTable = () => {
         position: "sticky",
         top: 0,
         zIndex: 10,
-        backgroundColor: "#fff",
+        backgroundColor: "rgba(10,15,26,0.95)",
         p: 2,
         borderRadius: 2,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+        boxShadow: '0 4px 12px rgba(0,0,0,0.35)',
+        border: '1px solid rgba(255,255,255,0.10)'
       }}>
         <Button
           variant="contained"
@@ -404,7 +405,7 @@ const MarksTable = () => {
           justifyContent: 'space-around',
           p: 2,
           flexWrap: 'wrap',
-          backgroundColor: '#f5f9ff'
+          backgroundColor: 'rgba(71,85,105,0.18)'
         }}>
           <Card sx={{ minWidth: 160, m: 1, p: 2, textAlign: 'center', boxShadow: '0 3px 10px rgba(0,0,0,0.08)', borderRadius: 2 }}>
             <Typography variant="overline" color="textSecondary">Mid 1 Average</Typography>
@@ -474,7 +475,7 @@ const MarksTable = () => {
           >
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: '#f3f6ff' }}>
+                <TableRow sx={{ backgroundColor: 'rgba(71,85,105,0.22)' }}>
                   <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Subject</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Mid 1</TableCell>
                   <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Mid 2</TableCell>
@@ -486,8 +487,8 @@ const MarksTable = () => {
                   <TableRow 
                     key={index} 
                     sx={{ 
-                      '&:nth-of-type(odd)': { backgroundColor: '#fafcff' },
-                      '&:hover': { backgroundColor: '#f0f7ff' },
+                      '&:nth-of-type(odd)': { backgroundColor: 'rgba(255,255,255,0.02)' },
+                      '&:hover': { backgroundColor: 'rgba(148,163,184,0.08)' },
                       transition: 'background-color 0.2s'
                     }}
                   >
@@ -620,7 +621,7 @@ const MarksTable = () => {
         <Box sx={{ 
           width: '100%', 
           height: 8, 
-          backgroundColor: '#e0e0e0', 
+          backgroundColor: 'rgba(71,85,105,0.30)',
           borderRadius: 4,
           position: 'relative'
         }}>

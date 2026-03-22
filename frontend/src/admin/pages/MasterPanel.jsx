@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Building2, Users, BarChart3, Eye, FileText, Layers, CalendarCheck,
+} from 'lucide-react';
 import apiClient from '../../apiClient';
 import PanelLayout from '../components/PanelLayout';
 import MasterDashboard from '../components/MasterDashboard';
@@ -8,7 +11,7 @@ const MasterPanel = () => {
   const navigate = useNavigate();
   const [info,    setInfo]    = useState({ name: '', email: '' });
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState(null); // null = home (cards view)
+  const [activeSection, setActiveSection] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -33,26 +36,25 @@ const MasterPanel = () => {
     navigate('/signup');
   };
 
-  // Cards — sections rendered inline; external pages still navigate
   const CARDS = [
-    { icon: '🏛️', title: 'Manage Departments',   desc: 'Create and configure all college departments',              onClick: () => setActiveSection('manage'),     color: '#0ea5e9' },
-    { icon: '👑', title: 'Manage Users & Roles',  desc: 'Create the Principal account and assign HODs to departments', onClick: () => setActiveSection('create'),     color: '#6366f1' },
-    { icon: '📊', title: 'Analytics',             desc: 'Institution-wide analytics and reports',                    onClick: () => setActiveSection('analytics'), color: '#06b6d4' },
-    { icon: '👁️', title: 'Panel Overview',        desc: 'View any role panel from a single interface',               onClick: () => setActiveSection('panel'),     color: '#ec4899' },
-    { icon: '📋', title: 'Counselling Overview',  desc: 'Institution-wide counselling forms and data',               onClick: () => setActiveSection('counseling'), color: '#10b981' },
-    { icon: '🗂️', title: 'All Batches',           desc: 'Year-wise student list across all departments',             onClick: () => navigate('/all-batches'),       color: '#f59e0b' },
-    { icon: '✅', title: 'Attendance Reports',    desc: 'Attendance data across the entire institution',              onClick: () => navigate('/attendance'),        color: '#ef4444' },
+    { icon: Building2,    title: 'Manage Departments',  desc: 'Create and configure all college departments',               onClick: () => setActiveSection('manage'),     color: '#38bdf8' },
+    { icon: Users,        title: 'Manage Users & Roles', desc: 'Create Principal, HOD, Faculty and Student accounts',        onClick: () => setActiveSection('create'),     color: '#a78bfa' },
+    { icon: BarChart3,    title: 'Analytics',            desc: 'Institution-wide analytics and profile reports',             onClick: () => setActiveSection('analytics'), color: '#818cf8' },
+    { icon: Eye,          title: 'Panel Overview',       desc: 'View any role panel from a single interface',                onClick: () => setActiveSection('panel'),     color: '#6366f1' },
+    { icon: FileText,     title: 'Counselling Overview', desc: 'Institution-wide counselling forms and data',                onClick: () => setActiveSection('counseling'), color: '#c084fc' },
+    { icon: Layers,       title: 'All Batches',          desc: 'Year-wise student list across all departments',              onClick: () => navigate('/all-batches'),       color: '#60a5fa' },
+    { icon: CalendarCheck,title: 'Attendance Reports',   desc: 'Attendance data across the entire institution',              onClick: () => navigate('/attendance'),        color: '#f472b6' },
   ];
 
   return (
     <PanelLayout
-      roleLabel="Master Panel"
-      roleColor="#0ea5e9"
+      roleLabel="Master"
+      roleColor="#1d4ed8"
       info={info}
       stats={[
-        { label: 'Role',   value: 'Master',             color: '#0ea5e9' },
-        { label: 'Access', value: 'Institution-Wide' },
-        { label: 'Status', value: 'Active',             color: '#10b981' },
+        { label: 'Role',   value: 'Master',            color: '#1d4ed8' },
+        { label: 'Access', value: 'Institution-Wide',  color: '#7c3aed' },
+        { label: 'Status', value: 'Active',            color: '#047857' },
       ]}
       sectionTitle={activeSection ? '' : 'Master Features'}
       cards={CARDS}

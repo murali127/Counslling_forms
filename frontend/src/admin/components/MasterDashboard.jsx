@@ -186,11 +186,12 @@ const MasterDashboard = ({ section: sectionProp, onBack }) => {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             marginBottom: 16, padding: '6px 14px', borderRadius: 8,
-            border: '1px solid #e2e8f0', background: '#fff',
-            cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: '#475569',
+            border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(148,163,184,0.10)',
+            cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(16px)',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-          onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(148,163,184,0.18)'; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(148,163,184,0.10)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
         >
           ← Overview
         </button>

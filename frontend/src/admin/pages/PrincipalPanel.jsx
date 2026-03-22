@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Building2, UserCog, Shield, GraduationCap, FileText, BarChart3, Layers, CalendarCheck,
+} from 'lucide-react';
 import apiClient from '../../apiClient';
 import PanelLayout from '../components/PanelLayout';
 import PrincipalDashboard from '../components/PrincipalDashboard';
@@ -34,23 +37,23 @@ const PrincipalPanel = () => {
   };
 
   const CARDS = [
-    { icon: '🏢', title: 'Departments',       desc: 'Create, update and manage all college departments',    onClick: () => setActiveSection('departments'), color: '#06b6d4' },
-    { icon: '👨‍💼', title: 'Manage HODs',       desc: 'Assign and manage HOD accounts per department',        onClick: () => setActiveSection('superadmins'), color: '#8b5cf6' },
-    { icon: '🛡️', title: 'Manage Faculty',    desc: 'View and manage faculty accounts across departments',  onClick: () => setActiveSection('admins'),      color: '#6366f1' },
-    { icon: '🎓', title: 'Student Overview',  desc: 'Institution-wide student records and profiles',         onClick: () => setActiveSection('students'),    color: '#ec4899' },
-    { icon: '📋', title: 'Counselling Forms', desc: 'Access and print counselling forms for all students',  onClick: () => setActiveSection('counseling'),  color: '#10b981' },
-    { icon: '📊', title: 'Analytics',         desc: 'View institution-wide academic analytics and reports', onClick: () => setActiveSection('analytics'),   color: '#f59e0b' },
-    { icon: '🗂️', title: 'All Batches',       desc: 'Year-wise student list across all departments',        onClick: () => navigate('/all-batches'),         color: '#0ea5e9' },
-    { icon: '✅', title: 'Attendance Reports',desc: 'View attendance data across the institution',          onClick: () => navigate('/attendance'),          color: '#ef4444' },
+    { icon: Building2,     title: 'Departments',        desc: 'Create, update and manage all college departments',    onClick: () => setActiveSection('departments'), color: '#60a5fa' },
+    { icon: UserCog,       title: 'Manage HODs',        desc: 'Assign and manage HOD accounts per department',        onClick: () => setActiveSection('superadmins'), color: '#a78bfa' },
+    { icon: Shield,        title: 'Manage Faculty',     desc: 'View and manage faculty accounts across departments',  onClick: () => setActiveSection('admins'),      color: '#818cf8' },
+    { icon: GraduationCap, title: 'Student Overview',   desc: 'Institution-wide student records and profiles',        onClick: () => setActiveSection('students'),    color: '#6366f1' },
+    { icon: FileText,      title: 'Counselling Forms',  desc: 'Access and print counselling forms for all students',  onClick: () => setActiveSection('counseling'),  color: '#c084fc' },
+    { icon: BarChart3,     title: 'Analytics',          desc: 'View institution-wide academic analytics and reports', onClick: () => setActiveSection('analytics'),   color: '#38bdf8' },
+    { icon: Layers,        title: 'All Batches',        desc: 'Year-wise student list across all departments',        onClick: () => navigate('/all-batches'),        color: '#8b5cf6' },
+    { icon: CalendarCheck, title: 'Attendance Reports', desc: 'View attendance data across the institution',          onClick: () => navigate('/attendance'),         color: '#f472b6' },
   ];
 
   return (
     <PanelLayout
       roleLabel="Principal Panel"
-      roleColor="#06b6d4"
+      roleColor="#0e7490"
       info={info}
       stats={[
-        { label: 'Role',   value: 'Principal',              color: '#06b6d4' },
+        { label: 'Role',   value: 'Principal',              color: '#0e7490' },
         { label: 'Campus', value: info.dept || 'Main Campus' },
         { label: 'Status', value: 'Active',                 color: '#10b981' },
       ]}

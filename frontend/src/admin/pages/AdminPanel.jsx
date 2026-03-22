@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users, FileText, Lock, BookOpen, Star, CalendarCheck, Layers } from 'lucide-react';
 import apiClient from '../../apiClient';
 import PanelLayout from '../components/PanelLayout';
 import AdminUserManagement from './AdminUserManagement';
@@ -7,17 +8,20 @@ import AdminAccessControl from './AdminAccessControl';
 import AdminDataOverview from './AdminDataOverview';
 
 const SectionShell = ({ onBack, children }) => (
-  <div>
+  <div className="glass-section">
     <button
       onClick={onBack}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6,
-        marginBottom: 16, padding: '6px 14px', borderRadius: 8,
-        border: '1px solid #e2e8f0', background: '#fff',
-        cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: '#475569',
+        marginBottom: 16, padding: '8px 16px', borderRadius: 10,
+        border: '1px solid rgba(255,255,255,0.15)',
+        background: 'rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(12px)',
+        cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.8)',
+        transition: 'all 150ms ease',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-      onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
     >
       ← Overview
     </button>
@@ -63,13 +67,13 @@ const AdminPanel = () => {
   };
 
   const CARDS = [
-    { icon: '👥', title: 'Manage Students',   desc: 'Create, update and delete students assigned to you',    onClick: () => setActiveSection('users'),          color: '#8b5cf6' },
-    { icon: '📋', title: 'Counselling Forms', desc: 'View and print counselling forms of assigned students', onClick: () => setActiveSection('counselling'),    color: '#6366f1' },
-    { icon: '🔒', title: 'Access Control',    desc: 'Configure year-wise login windows and notify students', onClick: () => setActiveSection('access'),         color: '#ec4899' },
-    { icon: '📝', title: 'Semester Marks',    desc: 'View and update semester marks for assigned students',  onClick: () => navigate('/semester'),              color: '#06b6d4' },
-    { icon: '⭐', title: 'Mentor Grading',    desc: 'Grade assigned students across all years',              onClick: () => navigate('/mentorgrade'),           color: '#10b981' },
-    { icon: '✅', title: 'Attendance',         desc: 'View monthly attendance of assigned students',          onClick: () => navigate('/attendance'),            color: '#f59e0b' },
-    { icon: '🗂️', title: 'All Batches',       desc: 'Year-wise student list with counselling form access',   onClick: () => navigate('/all-batches'),           color: '#0ea5e9' },
+    { icon: Users,         title: 'Manage Students',   desc: 'Create, update and delete students assigned to you',    onClick: () => setActiveSection('users'),       color: '#818cf8' },
+    { icon: FileText,      title: 'Counselling Forms', desc: 'View and print counselling forms of assigned students', onClick: () => setActiveSection('counselling'), color: '#6366f1' },
+    { icon: Lock,          title: 'Access Control',    desc: 'Configure year-wise login windows and notify students', onClick: () => setActiveSection('access'),      color: '#f472b6' },
+    { icon: BookOpen,      title: 'Semester Marks',    desc: 'View and update semester marks for assigned students',  onClick: () => navigate('/semester'),           color: '#60a5fa' },
+    { icon: Star,          title: 'Mentor Grading',    desc: 'Grade assigned students across all years',              onClick: () => navigate('/mentorgrade'),        color: '#a78bfa' },
+    { icon: CalendarCheck, title: 'Attendance',        desc: 'View monthly attendance of assigned students',          onClick: () => navigate('/attendance'),         color: '#c084fc' },
+    { icon: Layers,        title: 'All Batches',       desc: 'Year-wise student list with counselling form access',   onClick: () => navigate('/all-batches'),        color: '#38bdf8' },
   ];
 
   const sectionMap = {
@@ -81,10 +85,10 @@ const AdminPanel = () => {
   return (
     <PanelLayout
       roleLabel="Faculty Panel"
-      roleColor="#8b5cf6"
+      roleColor="#7c3aed"
       info={info}
       stats={[
-        { label: 'Role',       value: 'Faculty',      color: '#8b5cf6' },
+        { label: 'Role',       value: 'Faculty',      color: '#7c3aed' },
         { label: 'Department', value: info.dept || 'N/A' },
         { label: 'Status',     value: 'Active',       color: '#10b981' },
       ]}

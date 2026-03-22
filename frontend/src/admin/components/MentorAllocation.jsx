@@ -255,20 +255,20 @@ const MentorAllocation = () => {
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
       {/* Progress Steps */}
-      <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f5f5f5' }}>
+      <Paper sx={{ p: 2, mb: 3, backgroundColor: 'rgba(71,85,105,0.18)', border: '1px solid rgba(255,255,255,0.12)' }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</Box>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>1</Box>
             <Typography variant="body2">Select Mentor</Typography>
           </Box>
           <Typography variant="body2">→</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</Box>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>2</Box>
             <Typography variant="body2">Select Year</Typography>
           </Box>
           <Typography variant="body2">→</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</Box>
+            <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</Box>
             <Typography variant="body2">Choose Mode & Allocate</Typography>
           </Box>
         </Box>
@@ -279,7 +279,7 @@ const MentorAllocation = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: 'fit-content' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>1</Box>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>1</Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
                 Select Mentor/Admin
               </Typography>
@@ -304,7 +304,7 @@ const MentorAllocation = () => {
                 <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                   Assigned Students {selectedYear === 'all' ? '(All Years)' : `(Year ${selectedYear})`}
                 </Typography>
-                <Box sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #ddd', borderRadius: 1, p: 1 }}>
+                <Box sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 1, p: 1 }}>
                   {assignedStudents.length > 0 ? (
                     assignedStudents.map(student => (
                       <Box
@@ -345,7 +345,7 @@ const MentorAllocation = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>2</Box>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>2</Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
                 Select Year
               </Typography>
@@ -367,7 +367,7 @@ const MentorAllocation = () => {
 
             {/* Step 3 */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, mt: 4 }}>
-              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: '#1976d2', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>3</Box>
+              <Box sx={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: 'rgba(129,140,248,0.85)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: 14 }}>3</Box>
               <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
                 Choose Allocation Mode
               </Typography>
@@ -424,7 +424,7 @@ const MentorAllocation = () => {
                     <TableContainer sx={{ maxHeight: 400 }}>
                       <Table stickyHeader size="small">
                         <TableHead>
-                          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                          <TableRow sx={{ backgroundColor: 'rgba(71,85,105,0.22)' }}>
                             <TableCell padding="checkbox">
                               <Checkbox
                                 checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
