@@ -59,7 +59,7 @@ const UserPanel = () => {
     <PanelLayout
       roleLabel="Student Portal"
       roleColor="#818cf8"
-      info={{ name: user.name, email: user.email }}
+      info={{ name: user.name, email: user.email, profilePicture: user.profilePicture }}
       stats={[
         { label: 'Role',               value: 'Student',             color: '#818cf8' },
         { label: 'Profile',            value: `${completion}%`,      color: '#a78bfa' },

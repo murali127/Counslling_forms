@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Send, Bot, User, Trash2, Copy, Check, Zap, Globe, MapPin, Layers, StopCircle } from 'lucide-react';
 
-const LIGHTRAG_BASE = process.env.REACT_APP_LIGHTRAG_URL || 'http://localhost:9621';
+const LIGHTRAG_BASE = process.env.REACT_APP_LIGHTRAG_URL || 'https://convo-chatbot.onrender.com';
 
 const MODES = [
   { key: 'hybrid',  label: 'Hybrid',  icon: Layers,  color: '#818cf8', desc: 'Best overall — combines local + global' },

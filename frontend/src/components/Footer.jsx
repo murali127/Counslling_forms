@@ -7,7 +7,7 @@ const Footer = () => {
     <footer style={footerStyle}>
       <div style={containerStyle}>
         <div style={leftStyle}>
-          <span style={{ fontWeight: 600, color: '#0f172a' }}>GVP-IT</span>
+          <span style={{ fontWeight: 600, color: 'rgba(255,255,255,0.80)' }}>GVP-IT</span>
           <span style={{ color: '#94a3b8', margin: '0 6px' }}>·</span>
           <span>Gayatri Vidyaparishad College of Engineering (Autonomous)</span>
         </div>
@@ -42,10 +42,11 @@ const Footer = () => {
 };
 
 const footerStyle = {
-  backgroundColor: '#ffffff',
-  borderTop:       '1px solid #e2e8f0',
+  backgroundColor: 'rgba(10,15,26,0.90)',
+  borderTop:       '1px solid rgba(255,255,255,0.08)',
   padding:         '16px 24px',
   marginTop:       'auto',
+  backdropFilter:  'blur(12px)',
 };
 
 const containerStyle = {
@@ -60,12 +61,12 @@ const containerStyle = {
 
 const leftStyle = {
   fontSize: '13px',
-  color:    '#475569',
+  color:    'rgba(255,255,255,0.50)',
 };
 
 const rightStyle = {
   fontSize:   '13px',
-  color:      '#94a3b8',
+  color:      'rgba(255,255,255,0.45)',
   display:    'flex',
   alignItems: 'center',
 };

@@ -24,6 +24,18 @@ const features = [
   { icon: "🌐", title: "Multi-language",      desc: "Google Translate integration for regional language support." },
 ];
 
+// Faculty — add more: { name, role, photo: 'https://www.gvpce.ac.in/IT/FacPhotos/[filename].jpg', initials, color }
+const facultyList = [
+  { name: 'Dr. M. Phani Krishna Kishore', role: 'Professor & Dean',               photo: 'https://www.gvpce.ac.in/IT/FacPhotos/mpkk.jpg',        initials: 'PK', color: '#818cf8' },
+  { name: 'Dr. B. Jaya Lakshmi',          role: 'Associate Professor & HOD',       photo: 'https://www.gvpce.ac.in/IT/FacPhotos/jayalakshmi.jpg',  initials: 'JL', color: '#a78bfa' },
+  { name: 'Dr. K.K. Sandhya Rani',        role: 'Associate Professor & IIC Convenor', photo: 'https://www.gvpce.ac.in/IT/FacPhotos/sandhya.jpg',   initials: 'SR', color: '#f472b6' },
+  { name: 'Mrs. M. Chandra Jyotsna',      role: 'Assistant Professor',             photo: 'https://www.gvpce.ac.in/IT/FacPhotos/jyotsna.jpg',      initials: 'CJ', color: '#c084fc' },
+  { name: 'Mr. Yayathi Pavan Kumar',      role: 'Assistant Professor',             photo: 'https://www.gvpce.ac.in/IT/FacPhotos/SYPavanKUmar.jpg', initials: 'YP', color: '#facc15' },
+  { name: 'Mr. P. Praveen Kumar',         role: 'Assistant Professor',             photo: 'https://www.gvpce.ac.in/IT/FacPhotos/p%20praveen.jpg',  initials: 'PP', color: '#34d399' },
+  { name: 'Mr. Srinu Bevara',             role: 'Asst. Prof. & Network Admin',     photo: 'https://www.gvpce.ac.in/IT/FacPhotos/SRINU%20B.jpg',    initials: 'SB', color: '#fb923c' },
+  { name: 'Mr. K.V.S.S. Prakash',        role: 'Assistant Professor',             photo: 'https://www.gvpce.ac.in/IT/FacPhotos/SatyaPrakash.jpg', initials: 'KP', color: '#38bdf8' },
+];
+
 const testimonials = [
   { quote: "GVP-IT's portal made submitting counselling forms so much faster. Everything is in one place!", name: "Priya Sharma", batch: "CSE 2024" },
   { quote: "The mentor grading system gives real feedback on my progress every semester.", name: "Rahul Reddy", batch: "IT 2025" },
@@ -183,17 +195,39 @@ const LandingPage = () => {
               style={{ flexShrink: 0, width: "36px", height: "36px", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "50%", background: "rgba(148,163,184,0.10)", backdropFilter: "blur(16px)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "rgba(255,255,255,0.70)" }}
             >‹</button>
 
-            <div id="facultyContainer" style={{ display: "flex", overflowX: "auto", gap: "16px", padding: "8px 4px 12px", scrollbarWidth: "none", flexGrow: 1 }}>
-              {[...Array(10)].map((_, i) => (
+            <div id="facultyContainer" style={{ display: "flex", overflowX: "auto", gap: "16px", padding: "8px 4px 16px", scrollbarWidth: "none", flexGrow: 1 }}>
+              {facultyList.map((f, i) => (
                 <motion.div
                   key={i}
-                  whileHover={{ y: -3 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  style={{ minWidth: "180px", ...glass, padding: "20px", textAlign: "center" }}
+                  style={{ minWidth: "190px", maxWidth: "190px", ...glass, padding: "24px 18px 20px", textAlign: "center", cursor: "default" }}
                 >
-                  <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "rgba(148,163,184,0.20)", border: "1px solid rgba(255,255,255,0.14)", margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>👩‍🏫</div>
-                  <div style={{ fontWeight: 700, fontSize: "14px", color: "rgba(255,255,255,0.90)", marginBottom: "4px" }}>Faculty {i + 1}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.40)" }}>Information Technology</div>
+                  {/* Photo or initials avatar */}
+                  {f.photo ? (
+                    <img
+                      src={f.photo}
+                      alt={f.name}
+                      onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                      style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", border: `2px solid ${f.color}55`, margin: "0 auto 14px", display: "block", boxShadow: `0 0 20px ${f.color}33` }}
+                    />
+                  ) : null}
+                  <div style={{
+                    width: "80px", height: "80px", borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${f.color}33, ${f.color}18)`,
+                    border: `2px solid ${f.color}44`,
+                    margin: "0 auto 14px",
+                    display: f.photo ? "none" : "flex",
+                    alignItems: "center", justifyContent: "center",
+                    fontSize: "20px", fontWeight: 800, color: f.color,
+                    letterSpacing: "-0.02em",
+                    boxShadow: `0 0 20px ${f.color}22`,
+                  }}>
+                    {f.initials}
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: "13.5px", color: "rgba(255,255,255,0.92)", marginBottom: "5px", lineHeight: 1.3 }}>{f.name}</div>
+                  <div style={{ fontSize: "11.5px", color: f.color, fontWeight: 600, marginBottom: "4px" }}>{f.role}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em" }}>Information Technology</div>
                 </motion.div>
               ))}
             </div>

@@ -67,12 +67,13 @@ const PanelLayout = ({
           {/* Avatar */}
           <div style={{
             width: 50, height: 50, borderRadius: '50%', marginBottom: 14,
-            background: `linear-gradient(135deg, ${roleColor}cc, ${roleColor}55)`,
+            background: info.profilePicture ? `url(${info.profilePicture}) center/cover no-repeat` : `linear-gradient(135deg, ${roleColor}cc, ${roleColor}55)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em',
             boxShadow: `0 0 0 3px rgba(255,255,255,0.08), 0 0 24px ${roleColor}44`,
+            flexShrink: 0,
           }}>
-            {initials}
+            {!info.profilePicture && initials}
           </div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.9)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {info.name || '—'}

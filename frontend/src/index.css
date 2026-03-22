@@ -192,10 +192,12 @@ input, select, textarea {
 
 /* Surface card */
 .surface-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: rgba(148,163,184,0.10);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.18);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25);
 }
 
 /* Buttons */
@@ -236,27 +238,27 @@ input, select, textarea {
 }
 
 .btn-secondary {
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  border-color: var(--color-border);
+  background: rgba(71,85,105,0.25);
+  color: rgba(255,255,255,0.85);
+  border-color: rgba(255,255,255,0.18);
 }
 
 .btn-secondary:hover {
-  background: var(--color-surface-raised);
-  border-color: var(--color-border-strong);
+  background: rgba(148,163,184,0.18);
+  border-color: rgba(255,255,255,0.30);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-text-secondary);
+  color: rgba(255,255,255,0.65);
   border-color: transparent;
 }
 
 .btn-ghost:hover {
-  background: var(--color-surface-raised);
-  color: var(--color-text-primary);
+  background: rgba(148,163,184,0.10);
+  color: rgba(255,255,255,0.90);
 }
 
 .btn-danger {
@@ -314,23 +316,23 @@ input, select, textarea {
 }
 
 .badge-primary {
-  background: var(--color-primary-light);
-  color: var(--color-primary-hover);
+  background: rgba(99,102,241,0.18);
+  color: #a5b4fc;
 }
 
 .badge-success {
-  background: var(--color-success-light);
-  color: var(--color-success-dark);
+  background: rgba(16,185,129,0.15);
+  color: #6ee7b7;
 }
 
 .badge-warning {
-  background: var(--color-warning-light);
-  color: #92400e;
+  background: rgba(245,158,11,0.15);
+  color: #fcd34d;
 }
 
 .badge-danger {
-  background: var(--color-danger-light);
-  color: var(--color-danger-hover);
+  background: rgba(239,68,68,0.15);
+  color: #fca5a5;
 }
 
 /* Divider */
@@ -348,7 +350,7 @@ input, select, textarea {
 }
 
 .skeleton {
-  background: var(--color-surface-raised);
+  background: rgba(71,85,105,0.30);
   border-radius: var(--radius-md);
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
@@ -618,4 +620,212 @@ input:focus, select:focus, textarea:focus {
 /* Checkbox */
 .glass-section input[type="checkbox"] {
   accent-color: #6366f1;
+}
+
+/* =====================================================
+   GLOBAL MUI HOVER & INTERACTIVE STATE FIXES
+   Kills all white/light flash on hover across every page
+   ===================================================== */
+
+/* TableRow hover — kills default light-grey flash globally */
+.MuiTableRow-root.MuiTableRow-hover:hover {
+  background: rgba(148,163,184,0.06) !important;
+}
+.MuiTableRow-root:hover {
+  background: rgba(148,163,184,0.06) !important;
+}
+.MuiTableRow-root:hover .MuiTableCell-root {
+  background: transparent !important;
+  color: rgba(255,255,255,0.92) !important;
+}
+
+/* MUI Button hover fixes — all variants */
+.MuiButton-root {
+  text-transform: none !important;
+}
+.MuiButton-outlined:hover {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+}
+.MuiButton-text:hover {
+  background: rgba(255,255,255,0.08) !important;
+}
+.MuiButton-contained:hover {
+  background: linear-gradient(135deg, #3730a3, #5b21b6, #6d28d9) !important;
+  box-shadow: 0 6px 20px rgba(109,40,217,0.45) !important;
+}
+.MuiButton-containedSuccess:hover {
+  background: rgba(4,120,87,0.5) !important;
+}
+.MuiButton-containedWarning {
+  background: rgba(180,83,9,0.5) !important;
+  color: #fcd34d !important;
+}
+.MuiButton-containedWarning:hover {
+  background: rgba(180,83,9,0.65) !important;
+}
+.MuiButton-containedError {
+  background: rgba(185,28,28,0.5) !important;
+  color: #fca5a5 !important;
+}
+.MuiButton-containedError:hover {
+  background: rgba(185,28,28,0.70) !important;
+}
+.MuiButton-outlinedError {
+  border-color: rgba(248,113,113,0.35) !important;
+  color: #fca5a5 !important;
+  background: rgba(185,28,28,0.10) !important;
+}
+.MuiButton-outlinedError:hover {
+  background: rgba(185,28,28,0.22) !important;
+  border-color: rgba(248,113,113,0.55) !important;
+}
+.MuiButton-containedSecondary {
+  background: rgba(109,40,217,0.5) !important;
+  color: #e9d5ff !important;
+}
+.MuiButton-containedSecondary:hover {
+  background: rgba(109,40,217,0.65) !important;
+}
+
+/* MUI Dialog — dark glass */
+.MuiDialog-root .MuiBackdrop-root {
+  background: rgba(0,0,0,0.65) !important;
+}
+.MuiDialog-paper {
+  background: rgba(10,15,26,0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  border-radius: 18px !important;
+  color: rgba(255,255,255,0.90) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6) !important;
+}
+.MuiDialogTitle-root {
+  background: transparent !important;
+  color: rgba(255,255,255,0.95) !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.MuiDialogContent-root {
+  background: transparent !important;
+  color: rgba(255,255,255,0.80) !important;
+}
+.MuiDialogContentText-root {
+  color: rgba(255,255,255,0.55) !important;
+}
+.MuiDialogActions-root {
+  background: transparent !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* MUI Tabs */
+.MuiTabs-root {
+  background: transparent !important;
+}
+.MuiTab-root {
+  color: rgba(255,255,255,0.55) !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+.MuiTab-root.Mui-selected {
+  color: #818cf8 !important;
+}
+.MuiTabs-indicator {
+  background-color: #818cf8 !important;
+}
+
+/* MUI TablePagination */
+.MuiTablePagination-root {
+  background: rgba(71,85,105,0.18) !important;
+  color: rgba(255,255,255,0.65) !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+}
+.MuiTablePagination-toolbar {
+  color: rgba(255,255,255,0.65) !important;
+}
+.MuiTablePagination-selectLabel,
+.MuiTablePagination-displayedRows {
+  color: rgba(255,255,255,0.55) !important;
+}
+.MuiTablePagination-select {
+  color: rgba(255,255,255,0.85) !important;
+}
+.MuiTablePagination-actions .MuiIconButton-root {
+  color: rgba(255,255,255,0.65) !important;
+}
+.MuiTablePagination-actions .MuiIconButton-root:hover {
+  background: rgba(255,255,255,0.08) !important;
+}
+.MuiTablePagination-actions .MuiIconButton-root.Mui-disabled {
+  color: rgba(255,255,255,0.25) !important;
+}
+
+/* MUI Switch */
+.MuiSwitch-track {
+  background-color: rgba(148,163,184,0.35) !important;
+  opacity: 1 !important;
+}
+.MuiSwitch-thumb {
+  background-color: rgba(255,255,255,0.75) !important;
+}
+.MuiSwitch-root .Mui-checked .MuiSwitch-thumb {
+  background-color: #818cf8 !important;
+}
+.MuiSwitch-root .Mui-checked + .MuiSwitch-track {
+  background-color: rgba(129,140,248,0.45) !important;
+  opacity: 1 !important;
+}
+
+/* MUI FormControlLabel */
+.MuiFormControlLabel-root .MuiFormControlLabel-label {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* MUI TextField helper text */
+.MuiFormHelperText-root {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+/* MUI Autocomplete / Select Menu backdrop */
+.MuiMenu-paper, .MuiPopover-paper, .MuiAutocomplete-paper {
+  background: rgba(10,15,26,0.98) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  border-radius: 10px !important;
+  color: rgba(255,255,255,0.90) !important;
+}
+.MuiList-root {
+  background: transparent !important;
+}
+
+/* MUI Select native & icon */
+.MuiNativeSelect-select {
+  background: rgba(71,85,105,0.25) !important;
+  color: rgba(255,255,255,0.90) !important;
+}
+
+/* MUI Checkbox */
+.MuiCheckbox-root {
+  color: rgba(255,255,255,0.40) !important;
+}
+.MuiCheckbox-root.Mui-checked {
+  color: #818cf8 !important;
+}
+.MuiCheckbox-root.MuiCheckbox-indeterminate {
+  color: #a78bfa !important;
+}
+
+/* MUI Avatar */
+.MuiAvatar-root {
+  background: rgba(71,85,105,0.45) !important;
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* Link tag color */
+a {
+  color: #818cf8;
+}
+a:hover {
+  color: #a5b4fc;
+  opacity: 1;
 }
