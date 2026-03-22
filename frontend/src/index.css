@@ -3,6 +3,19 @@
    Single source of truth for all colors, spacing, typography
    ============================================================ */
 
+/* ── Native select dark dropdown ── */
+select { color-scheme: dark; }
+select option {
+  background: #1e293b;
+  color: rgba(255,255,255,0.90);
+}
+select option:hover,
+select option:focus,
+select option:checked {
+  background: #3730a3;
+  color: #fff;
+}
+
 /* === DESIGN TOKENS === */
 :root {
   /* --- Brand Colors --- */
