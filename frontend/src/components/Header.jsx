@@ -27,20 +27,32 @@ const Header = () => {
     if (!isAuthenticated) return;
     (async () => {
       try {
+        const token = localStorage.getItem('authToken');
         const res = await apiClient.get('/api/auth/user', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
+        let name = res.data.username || 'User';
+        let picture = res.data.profilePicture || '';
+        try {
+          const p = await apiClient.get('/api/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (p.data.success && p.data.profile) {
+            if (p.data.profile.name)           name    = p.data.profile.name;
+            if (p.data.profile.profilePicture) picture = p.data.profile.profilePicture;
+          }
+        } catch (_) {}
         setUser({
-          name:             res.data.username || 'User',
-          email:            res.data.email || '',
-          profilePicture:   res.data.profilePicture || '',
+          name,
+          email:             res.data.email || '',
+          profilePicture:    picture,
           profileCompletion: res.data.role === 'master' ? 100 : (res.data.profileCompletion || 0),
         });
       } catch (err) {
         console.error('Header fetch failed', err);
       }
     })();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, location.pathname]);
 
   const handleLogoClick = () => {
     if (!isAuthenticated) { navigate('/landingpage'); return; }

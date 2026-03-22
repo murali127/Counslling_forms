@@ -342,7 +342,7 @@ const [isLoading, setIsLoading] = useState(true);
         </div>
 
         {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#6ee7b7', borderRadius: '8px', marginBottom: '15px', border: '1px solid rgba(16,185,129,0.25)' }}>{successMessage}</div>}
 
         <div className="profile-content">
           <div className="card" style={{ width: '100%' }}>
@@ -457,14 +457,14 @@ const [isLoading, setIsLoading] = useState(true);
         </div>
 
         {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#6ee7b7', borderRadius: '8px', marginBottom: '15px', border: '1px solid rgba(16,185,129,0.25)' }}>{successMessage}</div>}
 
         <div className="profile-content">
           <div className="card" style={{ width: '100%' }}>
             <h3>Basic Details</h3>
             
             {(isEditing || isNewUser) && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'rgba(71,85,105,0.20)', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Profile Picture</label>
                 {formData.profilePicture ? (
                   <img 
@@ -625,14 +625,14 @@ const [isLoading, setIsLoading] = useState(true);
         </div>
 
         {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+        {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#6ee7b7', borderRadius: '8px', marginBottom: '15px', border: '1px solid rgba(16,185,129,0.25)' }}>{successMessage}</div>}
 
         <div className="profile-content">
           <div className="card" style={{ width: '100%' }}>
             <h3>Basic Details</h3>
 
             {(isEditing || isNewUser) && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'rgba(71,85,105,0.20)', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Profile Picture</label>
                 {formData.profilePicture ? (
                   <img
@@ -1149,7 +1149,7 @@ const [isLoading, setIsLoading] = useState(true);
       </div>
       
       {error && <div className="error-message">{error}</div>}
-      {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '5px', marginBottom: '15px' }}>{successMessage}</div>}
+      {successMessage && <div className="success-message" style={{ padding: '10px', backgroundColor: 'rgba(16,185,129,0.15)', color: '#6ee7b7', borderRadius: '8px', marginBottom: '15px', border: '1px solid rgba(16,185,129,0.25)' }}>{successMessage}</div>}
       
       <div className="profile-content">
         <div className="profile-sidebar">
