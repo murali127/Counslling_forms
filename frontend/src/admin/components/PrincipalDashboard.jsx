@@ -338,7 +338,7 @@ const PrincipalDashboard = ({ section: sectionProp, onBack }) => {
   if (loading) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography>Loading principal dashboard...</Typography>
+        <Typography sx={{ color: 'rgba(255,255,255,0.55)' }}>Loading principal dashboard...</Typography>
       </Box>
     );
   }
@@ -347,14 +347,22 @@ const PrincipalDashboard = ({ section: sectionProp, onBack }) => {
     <Box sx={{ p: 0 }}>
       {onBack && (
         <Box sx={{ mb: 2 }}>
-          <Button
-            variant="outlined"
-            size="small"
+          <button
             onClick={onBack}
-            sx={{ borderColor: '#e2e8f0', color: '#475569', '&:hover': { borderColor: '#6366f1', color: '#6366f1' } }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 16px', borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.07)',
+              backdropFilter: 'blur(12px)',
+              cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.80)',
+              transition: 'all 150ms ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = 'rgba(255,255,255,0.80)'; }}
           >
             ← Overview
-          </Button>
+          </button>
         </Box>
       )}
 
