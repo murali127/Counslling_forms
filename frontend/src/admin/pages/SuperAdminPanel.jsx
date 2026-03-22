@@ -58,7 +58,15 @@ const SuperAdminPanel = () => {
         if (data.departmentId) {
           try { const d = await apiClient.get(`/api/principal/departments/${data.departmentId}`, cfg); dept = d.data?.name || ''; } catch (_) {}
         }
-        setInfo({ name: data.username, email: data.email, dept });
+        let name = data.username, profilePicture = '';
+        try {
+          const p = await apiClient.get('/api/profile', cfg);
+          if (p.data.success && p.data.profile) {
+            if (p.data.profile.name)           name           = p.data.profile.name;
+            if (p.data.profile.profilePicture) profilePicture = p.data.profile.profilePicture;
+          }
+        } catch (_) {}
+        setInfo({ name, email: data.email, dept, profilePicture });
 
         try {
           const res = await apiClient.get('/api/admin/users?role=user', cfg);
