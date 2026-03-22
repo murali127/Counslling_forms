@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, CalendarCheck, BookOpen, Star, FileText, Sparkles } from 'lucide-react';
+import { User, CalendarCheck, BookOpen, Star, FileText, Sparkles, Bot } from 'lucide-react';
 import apiClient from '../apiClient';
 import PanelLayout from '../admin/components/PanelLayout';
 
@@ -11,6 +11,7 @@ const CARDS = [
   { icon: BookOpen,     title: 'Semester Marks',    desc: 'View mid and external examination results',       path: '/semester',         color: '#a78bfa' },
   { icon: Star,         title: 'Mentor Grading',    desc: 'See evaluations from your assigned mentor',       path: '/mentorgrade',      color: '#c084fc' },
   { icon: FileText,     title: 'Counselling Forms', desc: 'Download and view your counselling form data',    path: '/counseling-forms', color: '#38bdf8' },
+  { icon: Bot,          title: 'AI Assistant',      desc: 'Ask the AI about academics, attendance and more', path: '/ai-chat',          color: '#f472b6' },
 ];
 
 const UserPanel = () => {

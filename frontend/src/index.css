@@ -137,7 +137,7 @@ body {
   font-family: var(--font-family);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
-  color: rgba(255,255,255,0.85);
+  color: #ffffff;
   background-color: rgba(10,15,26,1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -385,19 +385,19 @@ input, select, textarea {
 /* Profile page */
 .profile-container {
   background: transparent !important;
-  color: rgba(255,255,255,0.85) !important;
+  color: #ffffff !important;
 }
 .profile-container h1, .profile-container h2, .profile-container h3,
 .profile-container label, .profile-container p, .profile-container span,
 .profile-container th, .profile-container td {
-  color: rgba(255,255,255,0.85) !important;
+  color: rgba(255,255,255,0.92) !important;
 }
 .profile-sidebar, .profile-main-content, .profile-section,
 .form-section, .info-card, .tab-content {
   background: rgba(148,163,184,0.10) !important;
   backdrop-filter: blur(24px) !important;
   border: 1px solid rgba(255,255,255,0.18) !important;
-  color: rgba(255,255,255,0.85) !important;
+  color: rgba(255,255,255,0.92) !important;
 }
 .profile-header {
   border-bottom-color: rgba(255,255,255,0.18) !important;
@@ -424,10 +424,10 @@ input, select, textarea {
 input, select, textarea {
   background: rgba(71,85,105,0.18) !important;
   border-color: rgba(255,255,255,0.18) !important;
-  color: rgba(255,255,255,0.85) !important;
+  color: #ffffff !important;
 }
 input::placeholder, textarea::placeholder {
-  color: rgba(255,255,255,0.3) !important;
+  color: rgba(255,255,255,0.45) !important;
 }
 input:focus, select:focus, textarea:focus {
   border-color: rgba(226,232,240,0.5) !important;
@@ -443,12 +443,12 @@ input:focus, select:focus, textarea:focus {
   color: rgba(255,255,255,0.85) !important;
 }
 .MuiTableCell-root {
-  color: rgba(255,255,255,0.80) !important;
-  border-bottom-color: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border-bottom-color: rgba(255,255,255,0.10) !important;
 }
 .MuiTableHead-root .MuiTableCell-root {
-  background: rgba(71,85,105,0.18) !important;
-  color: rgba(255,255,255,0.45) !important;
+  background: rgba(71,85,105,0.25) !important;
+  color: rgba(255,255,255,0.65) !important;
 }
 .MuiTableRow-root:hover .MuiTableCell-root {
   background: rgba(148,163,184,0.08) !important;
@@ -461,20 +461,20 @@ input:focus, select:focus, textarea:focus {
   border-color: rgba(255,255,255,0.18) !important;
 }
 .MuiInputLabel-root, .MuiFormLabel-root {
-  color: rgba(255,255,255,0.45) !important;
+  color: rgba(255,255,255,0.65) !important;
 }
 .MuiSelect-icon, .MuiSvgIcon-root {
-  color: rgba(255,255,255,0.5) !important;
+  color: rgba(255,255,255,0.70) !important;
 }
 .MuiMenuItem-root {
   background: rgba(10,15,26,0.97) !important;
-  color: rgba(255,255,255,0.82) !important;
+  color: rgba(255,255,255,0.92) !important;
 }
 .MuiMenuItem-root:hover {
-  background: rgba(148,163,184,0.15) !important;
+  background: rgba(148,163,184,0.18) !important;
 }
-.MuiTypography-root { color: rgba(255,255,255,0.82) !important; }
-.MuiTypography-h4, .MuiTypography-h5, .MuiTypography-h6 { color: #fff !important; }
+.MuiTypography-root { color: rgba(255,255,255,0.92) !important; }
+.MuiTypography-h4, .MuiTypography-h5, .MuiTypography-h6 { color: #ffffff !important; }
 .MuiButton-contained {
   background: linear-gradient(135deg, #4338ca, #6d28d9, #7c3aed) !important;
   color: #fff !important;
@@ -519,22 +519,22 @@ input:focus, select:focus, textarea:focus {
 }
 .glass-section .MuiTypography-body2,
 .glass-section .MuiTypography-subtitle1 {
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.70) !important;
 }
 
 /* MUI Table */
 .glass-section .MuiTableHead-root .MuiTableCell-root {
-  background: rgba(71, 85, 105, 0.18) !important;
-  color: rgba(255, 255, 255, 0.4) !important;
-  border-color: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(71, 85, 105, 0.25) !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
   font-size: 10px !important;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   font-weight: 700 !important;
 }
 .glass-section .MuiTableBody-root .MuiTableCell-root {
-  color: rgba(255, 255, 255, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.90) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   font-size: 13px !important;
 }
 .glass-section .MuiTableRow-root:hover .MuiTableCell-root {

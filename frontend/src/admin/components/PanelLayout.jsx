@@ -77,7 +77,7 @@ const PanelLayout = ({
           <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.9)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {info.name || '—'}
           </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.60)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 10 }}>
             {info.email || ''}
           </div>
           <span style={{
@@ -100,7 +100,7 @@ const PanelLayout = ({
             <button
               key={title}
               onClick={onClick}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'rgba(255,255,255,0.5)', transition: 'all 150ms ease', marginBottom: 1 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: 'rgba(255,255,255,0.72)', transition: 'all 150ms ease', marginBottom: 1 }}
               onMouseEnter={e => { e.currentTarget.style.background = `${color}15`; e.currentTarget.style.color = '#fff'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
             >
@@ -143,7 +143,7 @@ const PanelLayout = ({
                 position: 'relative', overflow: 'hidden',
               }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${color || roleColor}, transparent)` }} />
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.60)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: color && color !== '#fff' ? color : '#fff', letterSpacing: '-0.02em' }}>{value}</div>
               </div>
             ))}
@@ -212,7 +212,7 @@ const PanelLayout = ({
                     {Icon && <Icon size={18} color={color} strokeWidth={1.8} />}
                   </div>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: 'rgba(255,255,255,0.92)', marginBottom: 6, lineHeight: 1.3 }}>{title}</div>
-                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.42)', lineHeight: 1.65 }}>{desc}</div>
+                  <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.65 }}>{desc}</div>
                 </motion.div>
               ))}
             </motion.div>

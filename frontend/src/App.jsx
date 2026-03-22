@@ -35,6 +35,7 @@ import PrincipalDashboard from './admin/components/PrincipalDashboard';
 import PrincipalPanel from './admin/pages/PrincipalPanel';
 import MasterDashboard from './admin/components/MasterDashboard';
 import MasterPanel from './admin/pages/MasterPanel';
+import AIChatPage from './pages/AIChatPage';
 
 
 // Protected Route Component with Role-Based Redirect
@@ -169,7 +170,8 @@ const App = () => {
           <Route path="/attendance/:email" element={<ProtectedRoute element={<Attendance />} />} />
           <Route path="/mentorgrade" element={<ProtectedRoute element={<MentorGrading />} />} />
           <Route path="/mentorgrade/:email" element={<ProtectedRoute element={<MentorGrading />} />} />
-          
+          <Route path="/ai-chat" element={<ProtectedRoute element={<AIChatPage />} />} />
+
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminRoute element={<AdminPanel />} />} />
           <Route path="/admin/users" element={<AdminRoute element={<AdminUserManagement />} />} />
