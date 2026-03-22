@@ -17,6 +17,8 @@ const superAdminRoutes = require("./routes/superadmin");
 const principalRoutes = require("./routes/principal");
 const masterRoutes = require("./routes/master");
 const supportChatRoutes = require('./routes/supportChat');
+const https = require('https');
+const http  = require('http');
 
 
 dotenv.config();
@@ -69,6 +71,59 @@ app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/principal", principalRoutes);
 app.use("/api/master", masterRoutes);
 app.use('/api/support-chat', supportChatRoutes);
+
+/* ── LightRAG proxy — avoids browser CORS block ── */
+const LIGHTRAG_BASE = process.env.LIGHTRAG_URL || 'https://convo-chatbot.onrender.com';
+
+app.post('/api/ai/query', async (req, res) => {
+  try {
+    const target = new URL('/query', LIGHTRAG_BASE);
+    const body   = JSON.stringify(req.body);
+    const lib    = target.protocol === 'https:' ? https : http;
+    const options = {
+      hostname: target.hostname,
+      port:     target.port || (target.protocol === 'https:' ? 443 : 80),
+      path:     target.pathname,
+      method:   'POST',
+      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    };
+    const proxy = lib.request(options, (upstream) => {
+      res.status(upstream.statusCode);
+      upstream.pipe(res);
+    });
+    proxy.on('error', (err) => res.status(502).json({ error: err.message }));
+    proxy.write(body);
+    proxy.end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ai/query/stream', async (req, res) => {
+  try {
+    const target = new URL('/query/stream', LIGHTRAG_BASE);
+    const body   = JSON.stringify({ ...req.body, stream: true });
+    const lib    = target.protocol === 'https:' ? https : http;
+    const options = {
+      hostname: target.hostname,
+      port:     target.port || (target.protocol === 'https:' ? 443 : 80),
+      path:     target.pathname,
+      method:   'POST',
+      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    };
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const proxy = lib.request(options, (upstream) => {
+      upstream.pipe(res);
+    });
+    proxy.on('error', (err) => res.end(`data: {"error":"${err.message}"}\n\n`));
+    proxy.write(body);
+    proxy.end();
+  } catch (err) {
+    res.end(`data: {"error":"${err.message}"}\n\n`);
+  }
+});
 
 // Centralized Error Handler Middleware
 app.use((err, req, res, next) => {

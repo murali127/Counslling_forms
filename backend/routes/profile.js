@@ -245,20 +245,27 @@ router.patch("/attendance/self", authMiddleware, async (req, res, next) => {
       return errorResponse(res, 404, "Profile not found");
     }
 
-    profile.attendance = profile.attendance || [];
-    let semesterEntry = profile.attendance.find(s => s.semester === semester);
-    if (!semesterEntry) {
-      semesterEntry = { semester, months: {} };
-      profile.attendance.push(semesterEntry);
-    }
-    semesterEntry.months[month] = { percentage };
-    profile.adminOverride = true;
-    await profile.save();
+    const semExists = profile.attendance?.some(s => s.semester === semester);
 
+    if (semExists) {
+      // Update existing semester's month using positional operator — bypasses pre-save hook
+      await Profile.updateOne(
+        { userId: req.user.id, 'attendance.semester': semester },
+        { $set: { [`attendance.$.months.${month}`]: { percentage } } }
+      );
+    } else {
+      // Push a new semester entry
+      await Profile.updateOne(
+        { userId: req.user.id },
+        { $push: { attendance: { semester, months: { [month]: { percentage } } } } }
+      );
+    }
+
+    const updated = await Profile.findOne({ userId: req.user.id });
     return res.status(200).json({
       success: true,
       message: "Attendance updated successfully",
-      attendance: profile.attendance
+      attendance: updated.attendance
     });
   } catch (err) { return next(err); }
 });
@@ -285,25 +292,25 @@ router.patch("/attendance", authMiddleware, adminMiddleware, async (req, res, ne
       return errorResponse(res, 404, "Profile not found");
     }
 
-    // Initialize attendance array if not exists
-    profile.attendance = profile.attendance || [];
-    
-    // Find or create semester entry
-    let semesterEntry = profile.attendance.find(s => s.semester === semester);
-    if (!semesterEntry) {
-      semesterEntry = { semester, months: {} };
-      profile.attendance.push(semesterEntry);
+    const semExists = profile.attendance?.some(s => s.semester === semester);
+
+    if (semExists) {
+      await Profile.updateOne(
+        { userId, 'attendance.semester': semester },
+        { $set: { [`attendance.$.months.${month}`]: { percentage } } }
+      );
+    } else {
+      await Profile.updateOne(
+        { userId },
+        { $push: { attendance: { semester, months: { [month]: { percentage } } } } }
+      );
     }
-    
-    // Update month's attendance
-    semesterEntry.months[month] = { percentage };
-    
-    await profile.save();
-    
+
+    const updated = await Profile.findOne({ userId });
     return res.status(200).json({
       success: true,
       message: "Attendance updated successfully",
-      attendance: profile.attendance
+      attendance: updated.attendance
     });
   } catch (err) { return next(err);
   }
