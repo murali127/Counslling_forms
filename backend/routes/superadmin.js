@@ -712,7 +712,7 @@ router.get("/management-users", authMiddleware, superAdminMiddleware, async (req
       departmentId: req.user.departmentId,
       isDeleted: { $ne: true }
     })
-      .select('_id email hasLoggedIn username')
+      .select('_id email hasLoggedIn username role')
       .lean();
 
     const userMap = {};
@@ -724,10 +724,12 @@ router.get("/management-users", authMiddleware, superAdminMiddleware, async (req
       const user = userMap[String(a.email || '').toLowerCase()];
       return {
         _id: a._id,
-        employee_name: a.employee_name,
+        employee_name: user?.username || a.employee_name,
+        username: user?.username || a.employee_name,
         employee_id: a.employee_id,
         email: a.email,
         department: a.department,
+        role: user?.role || 'admin',
         userId: user?._id || null,
         hasLoggedIn: !!user?.hasLoggedIn
       };

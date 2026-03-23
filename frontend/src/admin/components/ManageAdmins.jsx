@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../apiClient";
 import { Checkbox } from '@mui/material';
@@ -28,16 +28,28 @@ function ManageAdmins() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const loadManagementUsers = async () => {
+  const loadManagementUsers = useCallback(async () => {
     const res = await apiClient.get('/api/superadmin/management-users', {
+      params: { t: Date.now() },
       headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
     });
-    setAdmins(res.data || []);
-  };
+    const nextAdmins = Array.isArray(res.data) ? res.data : [];
+    setAdmins(nextAdmins);
+    setSelectedUserIds((prev) => prev.filter((id) => nextAdmins.some((a) => a._id === id)));
+    setPage((prev) => {
+      const maxPage = Math.max(0, Math.ceil(nextAdmins.length / rowsPerPage) - 1);
+      return Math.min(prev, maxPage);
+    });
+  }, [rowsPerPage]);
 
   useEffect(() => {
     loadManagementUsers().catch(() => setError('Failed to load management users'));
-  }, []);
+    const onFocus = () => {
+      loadManagementUsers().catch(() => setError('Failed to refresh management users'));
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [loadManagementUsers]);
 
   const paginatedAdmins = admins.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   const selectedCount = admins.filter((a) => selectedUserIds.includes(a._id)).length;
@@ -50,8 +62,7 @@ function ManageAdmins() {
       await apiClient.delete(`/api/superadmin/management-users/${adminId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
       });
-      setAdmins(prev => prev.filter(a => a._id !== adminId));
-      setSelectedUserIds((prev) => prev.filter((id) => id !== adminId));
+      await loadManagementUsers();
       setError('');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to delete user');
@@ -66,7 +77,7 @@ function ManageAdmins() {
         { userIds: selectedUserIds },
         { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } }
       );
-      setAdmins((prev) => prev.filter((u) => !selectedUserIds.includes(u._id)));
+      await loadManagementUsers();
       setSelectedUserIds([]);
       setError('');
     } catch (err) {
@@ -167,7 +178,7 @@ function ManageAdmins() {
                       sx={{ color: 'rgba(255,255,255,0.45)', '&.Mui-checked': { color: '#818cf8' }, padding: '4px' }}
                     />
                   </td>
-                  <td style={G.td}>{a.employee_name || a.username}</td>
+                  <td style={G.td}>{a.username || a.employee_name || a.email}</td>
                   <td style={{ ...G.td, color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{a.employee_id || '-'}</td>
                   <td style={{ ...G.td, color: 'rgba(255,255,255,0.55)' }}>{a.department || '-'}</td>
                   <td style={G.td}>
