@@ -9,13 +9,6 @@ const initialMessages = [
   }
 ];
 
-const quickPrompts = [
-  'How do I complete my profile?',
-  'Where can I download counseling forms?',
-  'How to assign students to admin?',
-  'Why is profile completion not 100%?'
-];
-
 const SupportChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -73,11 +66,6 @@ const SupportChatWidget = () => {
     await sendMessage(input);
   };
 
-  const onPromptClick = async (prompt) => {
-    if (isSending) return;
-    await sendMessage(prompt);
-  };
-
   return (
     <div className="support-chat-root" aria-live="polite">
       {isOpen && (
@@ -104,14 +92,6 @@ const SupportChatWidget = () => {
               </div>
             ))}
             {isSending && <div className="support-chat-bubble assistant">Thinking...</div>}
-          </div>
-
-          <div className="support-chat-prompts">
-            {quickPrompts.map((prompt) => (
-              <button key={prompt} type="button" onClick={() => onPromptClick(prompt)} disabled={isSending}>
-                {prompt}
-              </button>
-            ))}
           </div>
 
           {error && <div className="support-chat-error">{error}</div>}
