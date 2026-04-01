@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../apiClient';
 import {
-  Box, Typography, Paper, Grid, Avatar, Divider, CircularProgress, Alert, Button
+  Box, Typography, Paper, Grid, Divider, CircularProgress, Alert, Button
 } from '@mui/material';
 
 function StudentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,9 +35,6 @@ function StudentProfile() {
           setLoading(false);
           return;
         }
-
-        setUser(userData);
-
         // Fetch all profiles and find the one for this user
         const profilesResponse = await apiClient.get('/api/admin/profiles', {
           headers: { Authorization: `Bearer ${token}` }

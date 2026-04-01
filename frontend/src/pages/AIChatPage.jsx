@@ -55,6 +55,12 @@ const AIChatPage = () => {
 
   const stopStream = () => { abortRef.current?.abort(); };
 
+  const updateAssistantContent = useCallback((assistantId, content) => {
+    setMessages(prev => prev.map(m =>
+      m.id === assistantId ? { ...m, content, loading: false } : m
+    ));
+  }, []);
+
   const sendMessage = useCallback(async (text) => {
     const q = (text || input).trim();
     if (!q || streaming) return;
@@ -102,15 +108,11 @@ const AIChatPage = () => {
               const parsed = JSON.parse(data);
               const token = parsed.response ?? parsed.text ?? parsed.content ?? parsed.delta ?? '';
               accumulated += token;
-              setMessages(prev => prev.map(m =>
-                m.id === assistantId ? { ...m, content: accumulated, loading: false } : m
-              ));
+              updateAssistantContent(assistantId, accumulated);
             } catch {
               // plain text chunk
               accumulated += data;
-              setMessages(prev => prev.map(m =>
-                m.id === assistantId ? { ...m, content: accumulated, loading: false } : m
-              ));
+              updateAssistantContent(assistantId, accumulated);
             }
           }
         }
@@ -125,9 +127,7 @@ const AIChatPage = () => {
         });
         const json = await fallback.json();
         accumulated = json.response ?? json.result ?? json.answer ?? 'No response received.';
-        setMessages(prev => prev.map(m =>
-          m.id === assistantId ? { ...m, content: accumulated, loading: false } : m
-        ));
+        updateAssistantContent(assistantId, accumulated);
       }
 
     } catch (err) {
@@ -147,7 +147,7 @@ const AIChatPage = () => {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [input, mode, streaming]);
+  }, [input, mode, streaming, updateAssistantContent]);
 
   const copyMessage = (content, id) => {
     navigator.clipboard.writeText(content);
