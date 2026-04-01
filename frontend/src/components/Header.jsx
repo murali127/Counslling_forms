@@ -55,7 +55,11 @@ const Header = () => {
   }, [isAuthenticated, location.pathname]);
 
   const handleLogoClick = () => {
-    if (!isAuthenticated) { navigate('/landingpage'); return; }
+    navigate('/landingpage');
+  };
+
+  const handleDashboardClick = () => {
+    if (!isAuthenticated) { navigate('/dashboard'); return; }
     const role = localStorage.getItem('userRole') || localStorage.getItem('role');
     const map  = { superadmin: '/superadmin-panel', principal: '/principal-panel', master: '/master-panel', admin: '/admin-panel' };
     navigate(map[role] || '/dashboard');
@@ -164,7 +168,7 @@ const Header = () => {
                   {/* Nav items */}
                   {[
                     { label: 'My Profile', icon: User,            action: () => { navigate('/profile');    setIsDropdownOpen(false); } },
-                    { label: 'Dashboard',  icon: LayoutDashboard, action: () => { handleLogoClick();       setIsDropdownOpen(false); } },
+                    { label: 'Dashboard',  icon: LayoutDashboard, action: () => { handleDashboardClick();  setIsDropdownOpen(false); } },
                   ].map(({ label, icon: Icon, action }) => (
                     <button key={label} onClick={action} style={dropdownItemStyle}
                       onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}

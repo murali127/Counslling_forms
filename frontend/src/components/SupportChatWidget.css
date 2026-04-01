@@ -5,6 +5,16 @@
   z-index: 1300;
 }
 
+.support-chat-drag-handle {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.support-chat-root.dragging .support-chat-drag-handle {
+  cursor: grabbing;
+}
+
 .support-chat-fab {
   border: none;
   border-radius: 999px;

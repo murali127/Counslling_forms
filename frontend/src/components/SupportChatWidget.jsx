@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import apiClient from '../apiClient';
 import './SupportChatWidget.css';
 
@@ -15,6 +15,17 @@ const SupportChatWidget = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState('');
+  const [position, setPosition] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [suppressToggleClick, setSuppressToggleClick] = useState(false);
+  const rootRef = useRef(null);
+  const dragRef = useRef({
+    isActive: false,
+    offsetX: 0,
+    offsetY: 0,
+    moved: false,
+    cleanup: null,
+  });
 
   const canSend = useMemo(() => input.trim().length > 0 && !isSending, [input, isSending]);
 
@@ -66,11 +77,113 @@ const SupportChatWidget = () => {
     await sendMessage(input);
   };
 
+  const clampPosition = (x, y) => {
+    const widgetRect = rootRef.current?.getBoundingClientRect();
+    const widgetWidth = widgetRect?.width || 320;
+    const widgetHeight = widgetRect?.height || 68;
+    const margin = 8;
+    const maxX = Math.max(margin, window.innerWidth - widgetWidth - margin);
+    const maxY = Math.max(margin, window.innerHeight - widgetHeight - margin);
+
+    return {
+      x: Math.min(Math.max(margin, x), maxX),
+      y: Math.min(Math.max(margin, y), maxY),
+    };
+  };
+
+  const stopDrag = () => {
+    dragRef.current.isActive = false;
+    if (dragRef.current.cleanup) {
+      dragRef.current.cleanup();
+      dragRef.current.cleanup = null;
+    }
+    if (dragRef.current.moved) {
+      setSuppressToggleClick(true);
+      window.setTimeout(() => setSuppressToggleClick(false), 0);
+    }
+    setIsDragging(false);
+  };
+
+  const startDrag = (clientX, clientY) => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    dragRef.current.isActive = true;
+    dragRef.current.moved = false;
+    dragRef.current.offsetX = clientX - rect.left;
+    dragRef.current.offsetY = clientY - rect.top;
+
+    if (!position) {
+      setPosition({ x: rect.left, y: rect.top });
+    }
+
+    const handleMouseMove = (moveEvent) => {
+      if (!dragRef.current.isActive) return;
+      const nextX = moveEvent.clientX - dragRef.current.offsetX;
+      const nextY = moveEvent.clientY - dragRef.current.offsetY;
+      const clamped = clampPosition(nextX, nextY);
+      setPosition(clamped);
+      dragRef.current.moved = true;
+      setIsDragging(true);
+    };
+
+    const handleTouchMove = (moveEvent) => {
+      if (!dragRef.current.isActive || !moveEvent.touches?.length) return;
+      const touch = moveEvent.touches[0];
+      const nextX = touch.clientX - dragRef.current.offsetX;
+      const nextY = touch.clientY - dragRef.current.offsetY;
+      const clamped = clampPosition(nextX, nextY);
+      setPosition(clamped);
+      dragRef.current.moved = true;
+      setIsDragging(true);
+      moveEvent.preventDefault();
+    };
+
+    const handleMouseUp = () => stopDrag();
+    const handleTouchEnd = () => stopDrag();
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+
+    dragRef.current.cleanup = () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  };
+
+  const onDragStartMouse = (e) => {
+    if (e.button !== 0) return;
+    startDrag(e.clientX, e.clientY);
+  };
+
+  const onDragStartTouch = (e) => {
+    if (!e.touches?.length) return;
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY);
+  };
+
+  const rootStyle = position
+    ? { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto' }
+    : undefined;
+
   return (
-    <div className="support-chat-root" aria-live="polite">
+    <div
+      ref={rootRef}
+      className={`support-chat-root ${isDragging ? 'dragging' : ''}`}
+      style={rootStyle}
+      aria-live="polite"
+    >
       {isOpen && (
         <div className="support-chat-panel" role="dialog" aria-label="Customer support chat">
-          <div className="support-chat-header">
+          <div
+            className="support-chat-header support-chat-drag-handle"
+            onMouseDown={onDragStartMouse}
+            onTouchStart={onDragStartTouch}
+          >
             <div>
               <h4>GVP Support</h4>
               <p>Instant help via AI assistant</p>
@@ -113,8 +226,13 @@ const SupportChatWidget = () => {
 
       <button
         type="button"
-        className="support-chat-fab"
-        onClick={() => setIsOpen((prev) => !prev)}
+        className="support-chat-fab support-chat-drag-handle"
+        onMouseDown={onDragStartMouse}
+        onTouchStart={onDragStartTouch}
+        onClick={() => {
+          if (suppressToggleClick) return;
+          setIsOpen((prev) => !prev);
+        }}
         aria-label="Open customer support chat"
       >
         {isOpen ? 'Close Chat' : 'Chat Support'}

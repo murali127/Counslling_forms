@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
+import muraliPhoto from "../images/Murali.jpeg";
+import gunjeshPhoto from "../images/gunjesh.jpeg";
+import tejaPhoto from "../images/Tejaswarrao.png";
+import rishiPhoto from "../images/rishi.jpeg";
 
 /* ─── Animation helpers ──────────────────────────────────── */
 const fadeUp = {
@@ -36,10 +40,29 @@ const facultyList = [
   { name: 'Mr. K.V.S.S. Prakash',        role: 'Assistant Professor',             photo: 'https://www.gvpce.ac.in/IT/FacPhotos/SatyaPrakash.jpg', initials: 'KP', color: '#38bdf8' },
 ];
 
+const developers = [
+  { name: 'Murali Paila', role: 'Developer', initials: 'MP', color: '#818cf8', photo: muraliPhoto, link: 'https://murali-paila.vercel.app/' },
+  { name: 'Gunjesh Kumar', role: 'Developer', initials: 'GK', color: '#34d399', photo: gunjeshPhoto, link: 'https://gunjesh.in' },
+  { name: 'Tejaswarrao Majji', role: 'Developer', initials: 'TM', color: '#f59e0b', photo: tejaPhoto, link: 'https://www.linkedin.com/in/teja-majji-3396a5291/' },
+  { name: 'JS Rishi Varma', role: 'Developer', initials: 'RV', color: '#f472b6', photo: rishiPhoto, link: 'https://www.linkedin.com/in/jsrishivarma/' },
+];
+
 const testimonials = [
-  { quote: "GVP-IT's portal made submitting counselling forms so much faster. Everything is in one place!", name: "Priya Sharma", batch: "CSE 2024" },
-  { quote: "The mentor grading system gives real feedback on my progress every semester.", name: "Rahul Reddy", batch: "IT 2025" },
-  { quote: "I can track my attendance and marks without bothering my HOD. Brilliant system.", name: "Aditya Kumar", batch: "ECE 2024" },
+  {
+    quote: 'The portal gives our department a clear and structured view of counselling records, attendance, and mentoring progress in one place.',
+    name: 'Dr. B. Jaya Lakshmi',
+    batch: 'Associate Professor & HOD, Information Technology',
+  },
+  {
+    quote: 'Mentor grading and student academic tracking are now transparent and efficient. This system significantly improves faculty coordination.',
+    name: 'Dr. M. Phani Krishna Kishore',
+    batch: 'Professor & Dean, Information Technology',
+  },
+  {
+    quote: 'The digital workflow has reduced manual effort and helps us review student progress quickly during counselling sessions.',
+    name: 'Dr. K.K. Sandhya Rani',
+    batch: 'Associate Professor & IIC Convenor, Information Technology',
+  },
 ];
 
 const faqs = [
@@ -237,6 +260,78 @@ const LandingPage = () => {
               style={{ flexShrink: 0, width: "36px", height: "36px", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "50%", background: "rgba(148,163,184,0.10)", backdropFilter: "blur(16px)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "rgba(255,255,255,0.70)" }}
             >›</button>
           </div>
+
+          <motion.div
+            initial="hidden" whileInView="show" viewport={{ once: true, margin: "-40px" }}
+            variants={fadeUp}
+            style={{ marginTop: "44px" }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "18px" }}>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, marginBottom: "8px" }}>
+                Project Team
+              </div>
+              <h3 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 800, letterSpacing: "-0.02em", color: "rgba(255,255,255,0.95)" }}>
+                Developers
+              </h3>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
+              {developers.map((d) => (
+                <div key={d.name} style={{ ...glass, padding: "18px", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{
+                    width: "56px", height: "56px", borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${d.color}33, ${d.color}18)`,
+                    border: `2px solid ${d.color}44`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    overflow: "hidden",
+                  }}>
+                    {d.photo ? (
+                      <img
+                        src={d.photo}
+                        alt={d.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: "15px", fontWeight: 800, color: d.color, letterSpacing: "-0.02em" }}>{d.initials}</span>
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: "14px", color: "rgba(255,255,255,0.92)", marginBottom: "3px" }}>{d.name}</div>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginBottom: "8px" }}>{d.role}</div>
+                    <a
+                      href={d.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "6px 10px",
+                        borderRadius: "8px",
+                        border: `1px solid ${d.color}55`,
+                        background: `${d.color}1a`,
+                        color: d.color,
+                        textDecoration: "none",
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        transition: "all 150ms ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = `${d.color}33`;
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = `${d.color}1a`;
+                        e.currentTarget.style.transform = "translateY(0)";
+                      }}
+                    >
+                      View Profile
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -250,7 +345,7 @@ const LandingPage = () => {
           >
             <div style={{ display: "inline-block", background: "rgba(129,140,248,0.12)", color: "#a5b4fc", borderRadius: "9999px", padding: "4px 14px", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "16px", border: "1px solid rgba(129,140,248,0.25)" }}>Testimonials</div>
             <h2 style={{ fontSize: "clamp(24px, 4vw, 36px)", fontWeight: 800, letterSpacing: "-0.02em", color: "rgba(255,255,255,0.95)" }}>
-              What Our Students Say
+              What Our Faculty Say
             </h2>
           </motion.div>
 
