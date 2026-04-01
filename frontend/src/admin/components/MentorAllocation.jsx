@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -51,7 +51,7 @@ const MentorAllocation = () => {
     { label: 'Year 4', value: 4 }
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     console.debug('[MentorAllocation] fetchData called');
     try {
       setLoading(true);
@@ -90,11 +90,11 @@ const MentorAllocation = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const deriveYearFromRoll = (roll) => {
     const prefix = String(roll || '').slice(0, 3);

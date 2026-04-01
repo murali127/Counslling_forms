@@ -15,17 +15,6 @@ const Footer = () => {
           <span>© {year} All rights reserved</span>
           <span style={{ color: '#e2e8f0', margin: '0 8px' }}>|</span>
           <a
-            href="https://www.linkedin.com/school/gvp-college-of-engineering"
-            target="_blank"
-            rel="noreferrer"
-            style={linkStyle}
-            onMouseEnter={(e) => e.target.style.color = '#6366f1'}
-            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-          >
-            LinkedIn
-          </a>
-          <span style={{ color: '#e2e8f0', margin: '0 8px' }}>|</span>
-          <a
             href="https://gvpce.ac.in"
             target="_blank"
             rel="noreferrer"

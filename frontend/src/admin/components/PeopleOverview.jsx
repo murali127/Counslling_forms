@@ -182,7 +182,7 @@ const PeopleOverview = () => {
   useEffect(() => {
     const visibleIds = new Set(filteredStudents.map((s) => s._id));
     setSelectedStudentIds((prev) => prev.filter((id) => visibleIds.has(id)));
-  }, [studentSearch, activeYear, students]);
+  }, [filteredStudents]);
 
   useEffect(() => {
     setAdminPage(0);

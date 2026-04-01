@@ -153,7 +153,7 @@ const Auth = () => {
           <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
               <FaUserGraduate size={20} color="#6d28d9" />
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#6d28d9' }}>GVP-IT Portal</span>
+              <span style={{ fontSize: '13px', fontWeight: 600, color: '#6d28d9' }}>LoginPortal</span>
             </div>
             <AnimatePresence mode="wait">
               <motion.div
@@ -190,6 +190,11 @@ const Auth = () => {
           {/* Demo accounts — only on sign-in */}
           {!isSignUp && (
             <div style={{ marginBottom: 20 }}>
+              <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+                <p style={{ fontSize: 12, color: '#334155', margin: 0 }}>
+                  Note: Students can sign in only when the login window is open.
+                </p>
+              </div>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
                 Demo Accounts
               </p>

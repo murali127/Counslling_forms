@@ -13,7 +13,6 @@ import Attendance from './pages/Attendance';
 import CounselingForm from './pages/CounselingForm';
 import CounselingFormsHub from './pages/CounselingFormsHub';
 import MentorGrading from './pages/MentorGrading';
-import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminPanel from './admin/pages/AdminPanel';
 import AdminUserManagement from './admin/pages/AdminUserManagement';
 import AdminDataOverview from './admin/pages/AdminDataOverview';

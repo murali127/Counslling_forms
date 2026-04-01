@@ -74,7 +74,6 @@ const Attendance = () => {
   const [error,          setError]          = useState('');
   const [success,        setSuccess]        = useState('');
   const [role,           setRole]           = useState('user');
-  const [selfId,         setSelfId]         = useState(''); // kept for potential future use
   const [students,       setStudents]       = useState([]);
   const [selectedEmail,  setSelectedEmail]  = useState(emailParam || '');
   const [selectedStudent,setSelectedStudent]= useState(null);
@@ -107,7 +106,6 @@ const Attendance = () => {
         });
         const currentRole = userRes.data?.role || 'user';
         setRole(currentRole);
-        setSelfId(userRes.data?._id || '');
 
         if (['admin', 'superadmin', 'principal', 'master'].includes(currentRole)) {
           const studentsRes = await apiClient.get('/api/admin/users?role=user', {
